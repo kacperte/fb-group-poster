@@ -11,6 +11,8 @@ import pickle
 import os
 import time
 
+LOGIN = "kacper.trzepiecinski@hsswork.pl"
+PASSWORD = "QuD*CC12d_Hju1!"
 
 
 class FacebookPoster:
@@ -45,40 +47,28 @@ class FacebookPoster:
         # Run function to retrive or make cookie for Facebook session
         self._login_to_facebook()
 
-    def _save_cookie(self):
-        # This function is to save Facebook session cookie
-        pickle.dump(self.driver.get_cookies(), open("cookies.pkl", "wb"))
-
-    def _load_cookie(self):
-        # This function is to load Facebook session cookie
-        with open("cookies.pkl", "rb") as file:
-            cookies = pickle.load(file)
-
-        for cookie in cookies:
-            self.driver.add_cookie(cookie)
-
     def _login_to_facebook(self):
         # This function is to log into Facebook
-        # If cookie file is already made, function will load it
-        # If not it will make it
-        if os.path.isfile("cookies.pkl") is True:
-            self.driver.get(self.base_url)
-            self._load_cookie()
 
-        else:
-            self.driver.get(self.base_url)
-            self.driver.find_element(
-                By.XPATH,
-                "//button[text()='Zezwól na korzystanie z niezbędnych i opcjonalnych plików cookie']",
-            ).click()
-            self.driver.find_element(By.ID, "email").send_keys(self.login)
-            self.driver.find_element(By.ID, "pass").send_keys(self.password)
-            time.sleep(2)
-            self.driver.find_element(By.XPATH, "//button[text()='Zaloguj się']").click()
-            WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.ID, "facebook"))
-            )
-            self._save_cookie()
+        self.driver.get(self.base_url)
+        self.driver.find_element(
+            By.XPATH,
+            "//button[text()='Zezwól na korzystanie z niezbędnych i opcjonalnych plików cookie']",
+        ).click()
+
+        # For pausing the script for sometime
+        self._time_patterns(3)
+
+        self.driver.find_element(By.ID, "email").send_keys(self.login)
+        self.driver.find_element(By.ID, "pass").send_keys(self.password)
+
+        # For pausing the script for sometime
+        self._time_patterns(3)
+
+        self.driver.find_element(By.XPATH, "//button[text()='Zaloguj się']").click()
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "facebook"))
+        )
 
     def _time_patterns(self, tp=None):
         # This function is to pause the script for some time
