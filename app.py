@@ -7,12 +7,32 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
-import pickle
-import os
 import time
+import datetime
 
+# Kacper
 LOGIN = "kacper.trzepiecinski@hsswork.pl"
 PASSWORD = "QuD*CC12d_Hju1!"
+
+# Patrycja
+LOGIN_ROSIK = "patrycja.rosik@hsswork.pl"
+PASSWORD_ROSIK = "Patrycja2022!"
+
+
+list_of_groups_lodz = [
+    # "https://www.facebook.com/groups/pracawlodzkim/",
+    # "https://www.facebook.com/groups/1752579184959123/",
+    # "https://www.facebook.com/groups/960366354163646/",
+    "https://www.facebook.com/groups/twojapraca/",
+    "https://www.facebook.com/groups/760248644024490/",
+    "https://www.facebook.com/groups/pracalodziokolice/",
+    "https://www.facebook.com/groups/1136807080150710/",
+    "https://www.facebook.com/groups/138646626771261/",
+    "https://www.facebook.com/groups/763209430360245/",
+    "https://www.facebook.com/groups/1416809508617643/",
+    "https://www.facebook.com/groups/974282212628235/",
+    "https://www.facebook.com/groups/2879497865669301/",
+]
 
 
 class FacebookPoster:
@@ -82,7 +102,7 @@ class FacebookPoster:
             self.time_pattern = tp
             time.sleep(self.time_pattern)
 
-    def prepare_and_send_post(self, filename, groups):
+    def prepare_and_send_post(self, content_filename, image_path, groups):
         # This function is to post content on Facebook group
 
         # JS scripts to load image to post
@@ -118,113 +138,120 @@ class FacebookPoster:
         fb_groups = groups
 
         # Itarate through groups
+        print(f"/// START PROCESS {datetime.datetime.now()}")
         for group in groups:
 
             # Load content from file
-            content = self.get_txt(filename)
+            content = self.get_txt(content_filename)
 
-            # Open Facebook group url
-            self.driver.get(group + "/buy_sell_discussion")
+            try:
+                # Open Facebook group url
+                self.driver.get(group + "buy_sell_discussion")
+                print(f"/// Start processing group: {group + 'buy_sell_discussion'}")
 
-            # For pausing the script for sometime
-            self._time_patterns(8)
+                # For pausing the script for sometime
+                self._time_patterns(8)
 
-            # Locate postbox element and click it
-            self.driver.find_element(
-                By.XPATH,
-                "//div[@class='xi81zsa x1lkfr7t xkjl1po x1mzt3pk xh8yej3 x13faqbe']",
-            ).click()
+                # Locate postbox element and click it
+                self.driver.find_element(
+                    By.XPATH,
+                    "//div[@class='xi81zsa x1lkfr7t xkjl1po x1mzt3pk xh8yej3 x13faqbe']",
+                ).click()
 
-            # For pausing the script for sometime
-            self._time_patterns(3)
+                # For pausing the script for sometime
+                self._time_patterns(3)
 
-            # Activate postbox pop up to send value to it
-            element = self.driver.switch_to.active_element
+                # Activate postbox pop up to send value to it
+                element = self.driver.switch_to.active_element
 
-            # Spilit content by newline symbol to dict
-            content = content.split("\n")
+                # Spilit content by newline symbol to dict
+                content = content.split("\n")
 
-            # Iterate through content
-            for con in content:
+                # Iterate through content
+                for con in content:
 
-                # Make first paragraph bold
-                # Check if 1-st itarate element is 1-st element from content dict
-                if con == content[0]:
+                    # Make first paragraph bold
+                    # Check if 1-st itarate element is 1-st element from content dict
+                    if con == content[0]:
 
-                    # Send value and then by action chain make it bold
-                    element.send_keys(con)
+                        # Send value and then by action chain make it bold
+                        element.send_keys(con)
 
-                    # First using CTRL + A to select whole text and
-                    # Then using CTRL + B to bold it
-                    # Then using SHIFT + ENTER to make newline
-                    self.action.key_down(Keys.CONTROL).send_keys("a").key_down(
-                        Keys.CONTROL
-                    ).send_keys("b").key_down(Keys.DOWN).key_down(Keys.SHIFT).key_down(
-                        Keys.ENTER
-                    ).perform()
+                        # First using CTRL + A to select whole text and
+                        # Then using CTRL + B to bold it
+                        # Then using SHIFT + ENTER to make newline
+                        self.action.key_down(Keys.CONTROL).send_keys("a").key_down(
+                            Keys.CONTROL
+                        ).send_keys("b").key_down(Keys.DOWN).key_down(Keys.SHIFT).key_down(
+                            Keys.ENTER
+                        ).perform()
 
-                    # Reste action chain
-                    self.action.reset_actions()
+                        # Reste action chain
+                        self.action.reset_actions()
 
-                    # Then deactivate bold format
-                    self.action.key_down(Keys.CONTROL).send_keys("b").perform()
+                        # Then deactivate bold format
+                        self.action.key_down(Keys.CONTROL).send_keys("b").perform()
 
-                    # For pausing the script for sometime
-                    self._time_patterns(3)
+                        # For pausing the script for sometime
+                        self._time_patterns(3)
 
-                # Check if itarate element has colon symbol
-                # If so bold the paragraph before colon
-                elif ":" in con:
-                    con = con.split(":")
-                    self.action.key_down(Keys.CONTROL).send_keys("b").perform()
-                    self.action.reset_actions()
-                    element.send_keys(con[0] + ":")
-                    self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys(
-                        "b"
-                    ).perform()
-                    self.action.reset_actions()
-                    element.send_keys(con[1])
-                    self.action.key_down(Keys.SHIFT).key_down(Keys.ENTER).perform()
-                    self.action.reset_actions()
+                    # Check if itarate element has colon symbol
+                    # If so bold the paragraph before colon
+                    elif ":" in con:
+                        con = con.split(":")
+                        self.action.key_down(Keys.CONTROL).send_keys("b").perform()
+                        self.action.reset_actions()
+                        element.send_keys(con[0] + ":")
+                        self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys(
+                            "b"
+                        ).perform()
+                        self.action.reset_actions()
+                        element.send_keys(con[1])
+                        self.action.key_down(Keys.SHIFT).key_down(Keys.ENTER).perform()
+                        self.action.reset_actions()
 
-                # Check if itarate element has question mark
-                # If so bold the paragraph before colon
-                elif "?" in con:
-                    con = con.split("?")
-                    self.action.key_down(Keys.CONTROL).send_keys("b").perform()
-                    self.action.reset_actions()
-                    element.send_keys(con[0] + "?")
-                    self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys(
-                        "b"
-                    ).perform()
-                    self.action.reset_actions()
-                    element.send_keys(con[1])
-                    self.action.key_down(Keys.SHIFT).key_down(Keys.ENTER).perform()
-                    self.action.reset_actions()
+                    # Check if itarate element has question mark
+                    # If so bold the paragraph before colon
+                    elif "?" in con:
+                        con = con.split("?")
+                        self.action.key_down(Keys.CONTROL).send_keys("b").perform()
+                        self.action.reset_actions()
+                        element.send_keys(con[0] + "?")
+                        self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys(
+                            "b"
+                        ).perform()
+                        self.action.reset_actions()
+                        element.send_keys(con[1])
+                        self.action.key_down(Keys.SHIFT).key_down(Keys.ENTER).perform()
+                        self.action.reset_actions()
 
-                # If none of the above just send text
-                else:
-                    element.send_keys(con)
-                    self.action.key_down(Keys.SHIFT).key_down(Keys.ENTER).perform()
-                    self.action.reset_actions()
+                    # If none of the above just send text
+                    else:
+                        element.send_keys(con)
+                        self.action.key_down(Keys.SHIFT).key_down(Keys.ENTER).perform()
+                        self.action.reset_actions()
 
-            # For pausing the script for sometime
-            self._time_patterns(5)
+                # For pausing the script for sometime
+                self._time_patterns(5)
 
-            # Add image to post
-            driver = element.parent
-            file_input = driver.execute_script(JS_DROP_FILE, element, 0, 0)
-            file_input.send_keys(
-                r"C:\Users\kacpe\OneDrive\Pulpit\Python\Projekty\facebook-group-poster\image\fb_image.jpg"
-            )
-            # For pausing the script for sometime
-            self._time_patterns()
+                # Add image to post
+                driver = element.parent
+                file_input = driver.execute_script(JS_DROP_FILE, element, 0, 0)
+                file_input.send_keys(image_path)
+                # For pausing the script for sometime
+                self._time_patterns()
 
-            # click post btn
-            self.driver.find_element(By.XPATH, "//div[@aria-label='Opublikuj']").click()
+                # click post btn
+                self.driver.find_element(By.XPATH, "//div[@aria-label='Opublikuj']").click()
 
-            # For pausing the script for sometime
-            self._time_patterns(10)
+                # For pausing the script for sometime
+                self._time_patterns(10)
+                print(f"/// End processing group: {group + 'buy_sell_discussion'}\n")
+
+            except Exception as e:
+                print(f"/// Problem with processing group: {group + 'buy_sell_discussion'}\nError: {e}")
+
+        print(f"/// END PROCESS {datetime.datetime.now()}")
 
     @staticmethod
     def get_txt(filename):
@@ -233,12 +260,8 @@ class FacebookPoster:
         return content
 
 
-list_of_groups = [
-    "https://www.facebook.com/groups/pracawlodzkim",
-    "https://www.facebook.com/groups/827356084424168",
-    "https://www.facebook.com/groups/726379827419126",
-]
-
-FacebookPoster(LOGIN, PASSWORD).prepare_and_send_post(
-    filename="content/1.txt", groups=list_of_groups
+FacebookPoster(LOGIN_ROSIK, PASSWORD_ROSIK).prepare_and_send_post(
+    content_filename="content/2.txt",
+    groups=list_of_groups_lodz,
+    image_path=r"C:\Users\kacpe\OneDrive\Pulpit\Python\Projekty\facebook-group-poster\image\2.jpg",
 )
