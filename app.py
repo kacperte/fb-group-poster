@@ -9,20 +9,46 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 import time
 import datetime
+import math
 
 # Kacper
-LOGIN = "kacper.trzepiecinski@hsswork.pl"
-PASSWORD = "QuD*CC12d_Hju1!"
+LOGIN_TRZEPIECINSKI = "kacper.trzepiecinski@hsswork.pl"
+PASSWORD_TRZEPIECINSKI = "QuD*CC12d_Hju1!"
 
 # Patrycja
 LOGIN_ROSIK = "patrycja.rosik@hsswork.pl"
 PASSWORD_ROSIK = "Patrycja2022!"
 
+# Beta
+LOGIN_BETA = "random2022@hsswork.pl"
+PASSWORD_BETA = "Ewelina2022!"
+
+# 1 HSS Work / Junior Sales / Łodź
+# 2 Flex / OWW / Łódź
+# 3 EMS / Lider UR / Ozorków
+# 4 EMS / Lider magazynu / Ozorków
+# 5 Commerz / AO Engineer / PL
+# 6 Podcast #3
+# 7 Ontex / Elektryk /
+# 8 Commerzbank / Tester
+# 9 Mera System / Lutowacz
+
+
+list_of_group_ontex = [
+    "https://www.facebook.com/groups/142724732594101",
+    "https://www.facebook.com/groups/praca.radomsko.i.okolice/",
+    "https://www.facebook.com/groups/753361791342068/",
+    "https://www.facebook.com/groups/spottedradomsko/",
+    "https://www.facebook.com/groups/1247057675373057/",
+    "https://www.facebook.com/groups/2047887718650686/",
+    "https://www.facebook.com/groups/399487134187093/",
+    "https://www.facebook.com/groups/elektryka.zlecenia/",
+]
 
 list_of_groups_lodz = [
-    # "https://www.facebook.com/groups/pracawlodzkim/",
-    # "https://www.facebook.com/groups/1752579184959123/",
-    # "https://www.facebook.com/groups/960366354163646/",
+    "https://www.facebook.com/groups/pracawlodzkim/",
+    "https://www.facebook.com/groups/1752579184959123/",
+    "https://www.facebook.com/groups/960366354163646/",
     "https://www.facebook.com/groups/twojapraca/",
     "https://www.facebook.com/groups/760248644024490/",
     "https://www.facebook.com/groups/pracalodziokolice/",
@@ -32,6 +58,179 @@ list_of_groups_lodz = [
     "https://www.facebook.com/groups/1416809508617643/",
     "https://www.facebook.com/groups/974282212628235/",
     "https://www.facebook.com/groups/2879497865669301/",
+]
+
+list_of_groups_near_to_lodz = [
+    "https://www.facebook.com/groups/1591972677700028/",
+    "https://www.facebook.com/groups/pracawlodzkim/",
+    "https://www.facebook.com/groups/414347195775522/",
+    "https://www.facebook.com/groups/1506773682975704/",
+    "https://www.facebook.com/groups/787211341389390/",
+    "https://www.facebook.com/groups/913932121977225/",
+    "https://www.facebook.com/groups/1752579184959123/",
+    "https://www.facebook.com/groups/960366354163646/",
+    "https://www.facebook.com/groups/319428066419643/",
+    "https://www.facebook.com/groups/743168796020262/",
+    "https://www.facebook.com/groups/606779323257076/",
+    "https://www.facebook.com/groups/twojapraca/",
+    "https://www.facebook.com/groups/2129168737332275/",
+    "https://www.facebook.com/groups/4747293448638141/",
+    "https://www.facebook.com/groups/pracalodziokolice/",
+    "https://www.facebook.com/groups/praca.zgierz.i.okolice/",
+    "https://www.facebook.com/groups/763209430360245/",
+    "https://www.facebook.com/groups/2879497865669301/",
+    "https://www.facebook.com/groups/1746008952280288/",
+    "https://www.facebook.com/groups/742377425799876/",
+    "https://www.facebook.com/groups/579729288832677/",
+    "https://www.facebook.com/groups/254387078043166/",
+    "https://www.facebook.com/groups/290336925855596/",
+    "https://www.facebook.com/groups/158416511613756/",
+]
+
+list_of_groups_test = ["https://www.facebook.com/groups/346798059107759"]
+
+list_of_groups_it = [
+    "https://www.facebook.com/groups/pracait/",
+    "https://www.facebook.com/groups/codersbase/",
+    "https://www.facebook.com/groups/695612637127175/",
+    "https://www.facebook.com/groups/pracawbranzyit/",
+    "https://www.facebook.com/groups/790784451359457/",
+    "https://www.facebook.com/groups/217466495754575/",
+    "https://www.facebook.com/groups/1037579849611331/",
+    "https://www.facebook.com/groups/praca.it.wynagrodzenia/",
+    "https://www.facebook.com/groups/1645832589008328/",
+    "https://www.facebook.com/groups/2138351569774276/",
+    "https://www.facebook.com/groups/1938514189734088/",
+    "https://www.facebook.com/groups/1644439072503808/",
+    "https://www.facebook.com/groups/1778129425801951/",
+    "https://www.facebook.com/groups/1458889777456828/",
+    "https://www.facebook.com/groups/programowanie.bez.ms/",
+    "https://www.facebook.com/groups/663140057518227/",
+    "https://www.facebook.com/groups/1401505446567527/",
+    "https://www.facebook.com/groups/itselecta.comitrecruitment/",
+    "https://www.facebook.com/groups/246806639124789/",
+    "https://www.facebook.com/groups/234054030066096/",
+    "https://www.facebook.com/groups/305254166296839/",
+    "https://www.facebook.com/groups/268603053543086/",
+]
+
+list_of_groups_it_tester = [
+    "https://www.facebook.com/groups/215557562210470/",
+    "https://www.facebook.com/groups/testeroprogramowania/",
+    "https://www.facebook.com/groups/TestowanieOprogramowania/",
+    "https://www.facebook.com/groups/808752555920542/",
+    "https://www.facebook.com/groups/1301980159852443/",
+]
+
+list_of_random_group_to_promote_podcast = [
+    # "https://www.facebook.com/groups/1591972677700028/",
+    "https://www.facebook.com/groups/pracawlodzkim/",
+    "https://www.facebook.com/groups/414347195775522/",
+    "https://www.facebook.com/groups/1506773682975704/",
+    "https://www.facebook.com/groups/787211341389390/",
+    "https://www.facebook.com/groups/913932121977225/",
+    "https://www.facebook.com/groups/1752579184959123/",
+    "https://www.facebook.com/groups/960366354163646/",
+    "https://www.facebook.com/groups/319428066419643/",
+    "https://www.facebook.com/groups/743168796020262/",
+    "https://www.facebook.com/groups/606779323257076/",
+    "https://www.facebook.com/groups/twojapraca/",
+    "https://www.facebook.com/groups/2129168737332275/",
+    "https://www.facebook.com/groups/4747293448638141/",
+    "https://www.facebook.com/groups/pracalodziokolice/",
+    "https://www.facebook.com/groups/praca.zgierz.i.okolice/",
+    "https://www.facebook.com/groups/763209430360245/",
+    "https://www.facebook.com/groups/2879497865669301/",
+    "https://www.facebook.com/groups/1746008952280288/",
+    "https://www.facebook.com/groups/742377425799876/",
+    "https://www.facebook.com/groups/579729288832677/",
+    "https://www.facebook.com/groups/254387078043166/",
+    "https://www.facebook.com/groups/290336925855596/",
+    "https://www.facebook.com/groups/158416511613756/",
+    "https://www.facebook.com/groups/pracawlodzkim/",
+    "https://www.facebook.com/groups/1752579184959123/",
+    "https://www.facebook.com/groups/960366354163646/",
+    "https://www.facebook.com/groups/twojapraca/",
+    "https://www.facebook.com/groups/760248644024490/",
+    "https://www.facebook.com/groups/pracalodziokolice/",
+    "https://www.facebook.com/groups/1136807080150710/",
+    "https://www.facebook.com/groups/138646626771261/",
+    "https://www.facebook.com/groups/763209430360245/",
+    "https://www.facebook.com/groups/1416809508617643/",
+    "https://www.facebook.com/groups/974282212628235/",
+    "https://www.facebook.com/groups/2879497865669301/",
+    "https://www.facebook.com/groups/2119697838123790/",
+    "https://www.facebook.com/groups/134620247233811/?ref=br_rs",
+    "https://www.facebook.com/groups/WrocPraca/?ref=br_rs",
+    "https://www.facebook.com/groups/1600710993482505/about/",
+    "https://www.facebook.com/groups/wroclawpracapl/?ref=br_rs",
+    "https://www.facebook.com/groups/1002400099791949/",
+    "https://www.facebook.com/groups/329625857161837/?ref=br_rs",
+    "https://www.facebook.com/groups/pracawroclawiokolice/about/",
+    "https://www.facebook.com/groups/970385873014887/?ref=br_rs",
+    "https://www.facebook.com/groups/894987590582987",
+    "https://www.facebook.com/groups/830166273800534",
+    "https://www.facebook.com/groups/586166761768852",
+    "https://www.facebook.com/groups/314826248973624",
+    "https://www.facebook.com/groups/ofertypracytychy",
+    "https://www.facebook.com/groups/176926947533346",
+    "https://www.facebook.com/groups/768998859799287/",
+    "https://www.facebook.com/groups/251519282104808",
+    "https://www.facebook.com/groups/172910724002911",
+    "https://www.facebook.com/groups/1441643719216258/",
+    "https://www.facebook.com/groups/1864456150448209/",
+    "https://www.facebook.com/groups/1581482228819456/",
+    "https://www.facebook.com/groups/2160293464226028/",
+    "https://www.facebook.com/groups/422831414751045/",
+    "https://www.facebook.com/groups/kutnopraca/",
+    "https://www.facebook.com/groups/1761981317407784/",
+    "https://www.facebook.com/groups/295322197529979/",
+    "https://www.facebook.com/groups/1059257501093408/",
+    "https://www.facebook.com/groups/136837740280564/",
+    "https://www.facebook.com/groups/praca.plock.i.okolice/",
+    "https://www.facebook.com/groups/1615681028454288/",
+    "https://www.facebook.com/groups/pracawplocku/",
+    "https://www.facebook.com/groups/780883142685634/",
+]
+
+list_of_groups_maintanance = [
+    "https://www.facebook.com/groups/2204891923117646/",
+    "https://www.facebook.com/groups/399487134187093/",
+    "https://www.facebook.com/groups/elektryka.zlecenia/",
+    "https://www.facebook.com/groups/elektryka.zlecenia/",
+    "https://www.facebook.com/groups/967610236717155/",
+    "https://www.facebook.com/groups/AutomatycyPoland/",
+    "https://www.facebook.com/groups/UtrzymanieRuchuPL/",
+    "https://www.facebook.com/groups/automatykairobotykaforum/",
+    "https://facebook.com/groups/pracaautomatykarobotyka/",
+    "https://www.facebook.com/groups/automatykaprzemyslowa/",
+]
+
+list_of_groups_mera = [
+    "https://www.facebook.com/groups/praca.radom.oferty/",
+    "https://www.facebook.com/groups/102812547144262/",
+    "https://www.facebook.com/groups/1566853660289756/about",
+    "https://www.facebook.com/groups/milanowekinfo/",
+    "https://www.facebook.com/groups/1443439005961381/",
+    "https://www.facebook.com/groups/radomsko.praca/",
+    "https://www.facebook.com/groups/650962839027697/",
+    "https://www.facebook.com/groups/1247057675373057/",
+    "https://www.facebook.com/groups/151903202060044/",
+    "https://www.facebook.com/groups/2027118057329011/",
+    "https://www.facebook.com/groups/brwinowiokolica/",
+    "https://www.facebook.com/groups/960260534307429/",
+    "https://www.facebook.com/groups/2376693785885296/",
+    "https://www.facebook.com/groups/1131602607257396/",
+    "https://www.facebook.com/groups/1007691029384714/",
+    "https://www.facebook.com/groups/791957241754089/",
+    "https://www.facebook.com/groups/1952911918270413/",
+    "https://www.facebook.com/groups/475463137187172/",
+    "https://www.facebook.com/groups/552711378986043/",
+    "https://www.facebook.com/groups/grodziskmaz/",
+    "https://www.facebook.com/groups/1741013225979885/",
+    "https://www.facebook.com/groups/227173234353057/",
+    "https://www.facebook.com/groups/915405865154981/",
+    "https://www.facebook.com/groups/791123128082671/",
 ]
 
 
@@ -49,8 +248,10 @@ class FacebookPoster:
 
         # Setup Selenium Options
         # Add binary location for Firefox which is mandatory
+        # Headless mode on
         options = Options()
         options.binary_location = r"C:\Program Files\Mozilla Firefox\firefox.exe"
+        options.add_argument("--headless")
 
         # Setup Firefox driver
         self.driver = Firefox(
@@ -105,7 +306,7 @@ class FacebookPoster:
     def prepare_and_send_post(self, content_filename, image_path, groups):
         # This function is to post content on Facebook group
 
-        # JS scripts to load image to post
+        # JS scripts to load images to post
         JS_DROP_FILE = """
             var target = arguments[0],
                 offsetX = arguments[1],
@@ -138,6 +339,7 @@ class FacebookPoster:
         fb_groups = groups
 
         # Itarate through groups
+        start_t = time.time()
         print(f"/// START PROCESS {datetime.datetime.now()}")
         for group in groups:
 
@@ -182,7 +384,9 @@ class FacebookPoster:
                         # Then using SHIFT + ENTER to make newline
                         self.action.key_down(Keys.CONTROL).send_keys("a").key_down(
                             Keys.CONTROL
-                        ).send_keys("b").key_down(Keys.DOWN).key_down(Keys.SHIFT).key_down(
+                        ).send_keys("b").key_down(Keys.DOWN).key_down(
+                            Keys.SHIFT
+                        ).key_down(
                             Keys.ENTER
                         ).perform()
 
@@ -202,9 +406,9 @@ class FacebookPoster:
                         self.action.key_down(Keys.CONTROL).send_keys("b").perform()
                         self.action.reset_actions()
                         element.send_keys(con[0] + ":")
-                        self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys(
-                            "b"
-                        ).perform()
+                        self.action.send_keys(Keys.SPACE).key_down(
+                            Keys.CONTROL
+                        ).send_keys("b").perform()
                         self.action.reset_actions()
                         element.send_keys(con[1])
                         self.action.key_down(Keys.SHIFT).key_down(Keys.ENTER).perform()
@@ -217,9 +421,9 @@ class FacebookPoster:
                         self.action.key_down(Keys.CONTROL).send_keys("b").perform()
                         self.action.reset_actions()
                         element.send_keys(con[0] + "?")
-                        self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys(
-                            "b"
-                        ).perform()
+                        self.action.send_keys(Keys.SPACE).key_down(
+                            Keys.CONTROL
+                        ).send_keys("b").perform()
                         self.action.reset_actions()
                         element.send_keys(con[1])
                         self.action.key_down(Keys.SHIFT).key_down(Keys.ENTER).perform()
@@ -234,7 +438,7 @@ class FacebookPoster:
                 # For pausing the script for sometime
                 self._time_patterns(5)
 
-                # Add image to post
+                # Add images to post
                 driver = element.parent
                 file_input = driver.execute_script(JS_DROP_FILE, element, 0, 0)
                 file_input.send_keys(image_path)
@@ -242,16 +446,21 @@ class FacebookPoster:
                 self._time_patterns()
 
                 # click post btn
-                self.driver.find_element(By.XPATH, "//div[@aria-label='Opublikuj']").click()
+                self.driver.find_element(
+                    By.XPATH, "//div[@aria-label='Opublikuj']"
+                ).click()
 
                 # For pausing the script for sometime
                 self._time_patterns(10)
                 print(f"/// End processing group: {group + 'buy_sell_discussion'}\n")
 
             except Exception as e:
-                print(f"/// Problem with processing group: {group + 'buy_sell_discussion'}\nError: {e}")
-
+                print(
+                    f"/// Problem with processing group: {group + 'buy_sell_discussion'}\nError: {e}"
+                )
+        duration_t = time.time() - start_t
         print(f"/// END PROCESS {datetime.datetime.now()}")
+        print(f"/// Duration time: {math.ceil(duration_t / 60)} min")
 
     @staticmethod
     def get_txt(filename):
@@ -261,7 +470,7 @@ class FacebookPoster:
 
 
 FacebookPoster(LOGIN_ROSIK, PASSWORD_ROSIK).prepare_and_send_post(
-    content_filename="content/2.txt",
-    groups=list_of_groups_lodz,
-    image_path=r"C:\Users\kacpe\OneDrive\Pulpit\Python\Projekty\facebook-group-poster\image\2.jpg",
+    content_filename="content/9.txt",
+    groups=list_of_groups_mera,
+    image_path=r"C:\Users\kacpe\OneDrive\Pulpit\Python\Projekty\facebook-group-poster\images\9.jpg",
 )
