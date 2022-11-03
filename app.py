@@ -11,28 +11,6 @@ import time
 import datetime
 import math
 
-# Kacper
-LOGIN_TRZEPIECINSKI = "kacper.trzepiecinski@hsswork.pl"
-PASSWORD_TRZEPIECINSKI = "QuD*CC12d_Hju1!"
-
-# Patrycja
-LOGIN_ROSIK = "patrycja.rosik@hsswork.pl"
-PASSWORD_ROSIK = "Patrycja2022!"
-
-# Beta
-LOGIN_BETA = "random2022@hsswork.pl"
-PASSWORD_BETA = "Ewelina2022!"
-
-# 1 HSS Work / Junior Sales / Łodź
-# 2 Flex / OWW / Łódź
-# 3 EMS / Lider UR / Ozorków
-# 4 EMS / Lider magazynu / Ozorków
-# 5 Commerz / AO Engineer / PL
-# 6 Podcast #3
-# 7 Ontex / Elektryk /
-# 8 Commerzbank / Tester
-# 9 Mera System / Lutowacz
-
 
 list_of_group_ontex = [
     "https://www.facebook.com/groups/142724732594101",
