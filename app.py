@@ -469,8 +469,8 @@ class FacebookPoster:
         return content
 
 
-FacebookPoster(LOGIN_ROSIK, PASSWORD_ROSIK).prepare_and_send_post(
-    content_filename="content/9.txt",
-    groups=list_of_groups_mera,
-    image_path=r"C:\Users\kacpe\OneDrive\Pulpit\Python\Projekty\facebook-group-poster\images\9.jpg",
+FacebookPoster(LOGIN_BETA, PASSWORD_BETA).prepare_and_send_post(
+    content_filename="content/7.txt",
+    groups=list_of_group_ontex,
+    image_path=r"C:\Users\kacpe\OneDrive\Pulpit\Python\Projekty\facebook-group-poster\images\7.jpg",
 )
