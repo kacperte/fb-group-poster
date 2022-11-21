@@ -11,6 +11,9 @@ import time
 import datetime
 import math
 
+# 7 Ontex / Elektryk-Automatyk
+# 9 Mera / Lutowacz
+# 11 Arzyta / Inzynier ds. obiektu
 
 list_of_group_ontex = [
     "https://www.facebook.com/groups/142724732594101",
@@ -36,6 +39,36 @@ list_of_groups_lodz = [
     "https://www.facebook.com/groups/1416809508617643/",
     "https://www.facebook.com/groups/974282212628235/",
     "https://www.facebook.com/groups/2879497865669301/",
+    "https://www.facebook.com/groups/lodz.praca.dla.ciebie/",
+    "https://www.facebook.com/groups/1010139669075562/",
+    "https://www.facebook.com/groups/671940692944112/",
+    "https://www.facebook.com/groups/346798059107759/",
+    "https://www.facebook.com/groups/czasoowka.lodz/",
+    "https://www.facebook.com/groups/lodzposzukujepracy/",
+    "https://www.facebook.com/groups/lodzogloszenia/",
+    "https://www.facebook.com/groups/1067606614184860/",
+    "https://www.facebook.com/groups/czasoowka.lodz.caly.etat/",
+    "https://www.facebook.com/groups/1554410121480407/",
+    "https://www.facebook.com/groups/1699568310364615/",
+    "https://www.facebook.com/groups/2282881718624532/",
+    "https://www.facebook.com/groups/praca.lodz.ogloszenia/",
+    "https://www.facebook.com/groups/lodzpracapraktyki/",
+    "https://www.facebook.com/groups/362793541535944/",
+    "https://www.facebook.com/groups/1371562309554753/",
+    "https://www.facebook.com/groups/1505085786436790/",
+    "https://www.facebook.com/groups/583125689201174/posts/1283048445875558/",
+    "https://www.facebook.com/groups/660056814124519/",
+    "https://www.facebook.com/groups/lodzogloszeniagrupa/",
+    "https://www.facebook.com/groups/pracawlodzi/",
+    "https://www.facebook.com/groups/1905149069501138/",
+    "https://www.facebook.com/groups/2236990119709403/",
+    "https://www.facebook.com/groups/lodz.zlecenia.uslugi.praca.oferty/",
+    "https://www.facebook.com/groups/lodzpracapraktyki/",
+    "https://www.facebook.com/groups/372846992841608/",
+    "https://www.facebook.com/groups/1693184204273313/",
+    "https://www.facebook.com/groups/357742920903001/",
+    "https://www.facebook.com/groups/994195267445473/",
+    "https://www.facebook.com/groups/2802891756608015/",
 ]
 
 list_of_groups_near_to_lodz = [
@@ -211,6 +244,26 @@ list_of_groups_mera = [
     "https://www.facebook.com/groups/791123128082671/",
 ]
 
+list_of_group_arzyta = [
+    "https://www.facebook.com/groups/1566853660289756/",
+    "https://www.facebook.com/groups/368861743320665/",
+    "https://www.facebook.com/groups/288907941175509/",
+    "https://www.facebook.com/groups/558613274302475/",
+    "https://www.facebook.com/groups/1762074764073290/",
+    "https://www.facebook.com/groups/776419780413198/",
+    "https://www.facebook.com/groups/639884713019211/",
+    "https://www.facebook.com/groups/130187330995011/",
+    "https://www.facebook.com/groups/246628532416436/",
+    "https://www.facebook.com/groups/1762074764073290/",
+]
+
+# login BETA
+LOGIN_BETA = "random2022@hsswork.pl"
+PASSWORD_BETA = "Ewelina2022!"
+# login Rosik
+LOGIN_ROSIK = "patrycja.rosik@hsswork.pl"
+PASSWORD_ROSIK = "Patrycja2022!"
+
 
 class FacebookPoster:
     def __init__(self, login, password):
@@ -335,8 +388,10 @@ class FacebookPoster:
                 # Locate postbox element and click it
                 self.driver.find_element(
                     By.XPATH,
-                    "//div[@class='xi81zsa x1lkfr7t xkjl1po x1mzt3pk xh8yej3 x13faqbe']",
+                    "//div[@class='x6s0dn4 x78zum5 x1l90r2v x1pi30zi x1swvt13 xz9dl7a']",
                 ).click()
+
+                # OLD CLASS NAME 18.11.2022 xi81zsa x1lkfr7t xkjl1po x1mzt3pk xh8yej3 x13faqbe
 
                 # For pausing the script for sometime
                 self._time_patterns(3)
@@ -448,7 +503,7 @@ class FacebookPoster:
 
 
 FacebookPoster(LOGIN_BETA, PASSWORD_BETA).prepare_and_send_post(
-    content_filename="content/7.txt",
-    groups=list_of_group_ontex,
-    image_path=r"C:\Users\kacpe\OneDrive\Pulpit\Python\Projekty\facebook-group-poster\images\7.jpg",
+    content_filename="content/10.txt",
+    groups=list_of_groups_lodz,
+    image_path=r"C:\Users\kacpe\OneDrive\Pulpit\Python\Projekty\facebook-group-poster\images\10.jpg",
 )
