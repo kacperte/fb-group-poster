@@ -122,19 +122,45 @@ class FacebookPoster:
         # set number of words and symbols in text to post
         if list_of_action_to_do_with_text:
             content_without_tags = content.split(">")[-1]
-            n = len(content_without_tags.split())
+            n = len(content_without_tags) + 1
             print(content_without_tags, n)
 
+            # selenium_element.send_keys(content_without_tags)
+            # self.action.key_down(Keys.SHIFT).key_down(Keys.CONTROL).send_keys(
+            #     Keys.LEFT * n
+            # ).perform()
+            # self.action.reset_actions()
+            # time.sleep(5)
+            # for action in list_of_action_to_do_with_text:
+            #     text_modify_butttons[action].click()
+            #
+            # self.action.key_down(Keys.SHIFT).key_down(Keys.CONTROL).send_keys(Keys.RIGHT * n).perform()
+            # self.action.reset_actions()
+            #
+            # if 0 in list_of_action_to_do_with_text:
+            #     self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys("b").perform()
+            #     self.action.reset_actions()
+            # elif 1 in list_of_action_to_do_with_text:
+            #     self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys("i").perform()
+            #     self.action.reset_actions()
+            #
+            # self.action.key_down(Keys.ENTER).perform()
+            # self.action.reset_actions()
+            # self._time_patterns(2)
             selenium_element.send_keys(content_without_tags)
-            self.action.key_down(Keys.SHIFT).key_down(Keys.CONTROL).send_keys(
+            self.action.key_down(Keys.SHIFT).send_keys(
                 Keys.LEFT * n
             ).perform()
             self.action.reset_actions()
 
+            time.sleep(5)
+
             for action in list_of_action_to_do_with_text:
                 text_modify_butttons[action].click()
 
-            self.action.key_down(Keys.SHIFT).key_down(Keys.CONTROL).send_keys(Keys.RIGHT * n).perform()
+            self.action.key_down(Keys.SHIFT).send_keys(
+                Keys.RIGHT * n
+            ).perform()
             self.action.reset_actions()
 
             if 0 in list_of_action_to_do_with_text:
@@ -144,14 +170,16 @@ class FacebookPoster:
                 self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys("i").perform()
                 self.action.reset_actions()
 
-            self.action.key_down(Keys.ENTER).perform()
-            self.action.reset_actions()
-            self._time_patterns(2)
+            selenium_element.send_keys(Keys.ENTER)
+            selenium_element.send_keys(Keys.ENTER)
+
+
+
+
 
         else:
             selenium_element.send_keys(content)
-            self.action.key_down(Keys.SHIFT).key_down(Keys.ENTER).perform()
-            self.action.reset_actions()
+            selenium_element.send_keys(Keys.ENTER)
 
     def prepare_and_send_post(self, content_filename):
         fb_groups = ["https://www.facebook.com/groups/1281302162058634/"]
@@ -171,7 +199,7 @@ class FacebookPoster:
             ).click()
 
             # For pausing the script for sometime
-            self._time_patterns(3)
+            self._time_patterns(8)
 
             # Activate postbox pop up to send value to it
             postbox = self.driver.switch_to.active_element
