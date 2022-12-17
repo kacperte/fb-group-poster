@@ -8,6 +8,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 import time
+import re
 
 # login BETA
 LOGIN_BETA = "random2022@hsswork.pl"
@@ -27,8 +28,7 @@ class FacebookPoster:
         self.base_url = "https://www.facebook.com/"
 
         # Setup Selenium Options
-        # Add binary location for Firefox which is mandatory
-        # Headless mode on
+        # Add binary location for Firefox which is mandatory and headless mode on
         options = Options()
         options.binary_location = r"C:\Program Files\Mozilla Firefox\firefox.exe"
         # options.add_argument("--headless")
@@ -45,7 +45,7 @@ class FacebookPoster:
         # will be used by time patterns
         self.time_pattern = 5  # seconds
 
-        # INFO TO WRITE
+        # Dict with text format action
         self.text_formatting_action = {
             0: "b",  # bold text
             1: "i",  # italics text
@@ -56,7 +56,7 @@ class FacebookPoster:
             6: "ol",  # ordered list
         }
 
-        # Run function to retrive or make cookie for Facebook session
+        # Run function to log into Facebook accocutn
         self._login_to_facebook()
 
     @staticmethod
@@ -64,6 +64,15 @@ class FacebookPoster:
         with open(filename, "r", encoding="utf-8") as file:
             content = file.read()
         return content
+
+    @staticmethod
+    def check_if_url_in_content(content: str) -> int:
+        cases = ["www", "https://", ".com", ".pl"]
+
+        for case in cases:
+            if case in content.lower():
+                return 1
+        return 0
 
     def _login_to_facebook(self):
         # This function is to log into Facebook
@@ -101,7 +110,7 @@ class FacebookPoster:
             time.sleep(self.time_pattern)
 
     def text_editor(self, content: str, selenium_element):
-        # Locate text formatting bar with 7 buttons
+        # Locate text formatting panel
         text_modify_butttons = selenium_element.find_elements(
             By.XPATH, "//span[@class='x12mruv9 xfs2ol5 x1gslohp x12nagc']"
         )
@@ -112,45 +121,29 @@ class FacebookPoster:
         # Check if text content contains ">" symbol - it's text modify tag i.e. <b> for bold text. If so, we itarate
         # through list elements (without last one, which is out text to modify) to check how many text modifier trigger
         # we have and then add them to list_of_action_to_do_with_text
-        if len(content.split(">")) >= 2:
-            for i in range(len(content.split(">")) - 1):
+        # self.text_formatting_action <-- is a dict which contains text formating action description i.e. {0: "b"} for
+        # bold text
+        if re.findall(r'<(.+?)>', content):
+            for tag in re.findall(r'<(.+?)>', content):
                 for num, val in self.text_formatting_action.items():
-                    if val == [con.replace("<", "") for con in content.split(">")][i]:
+                    if val == tag:
                         list_of_action_to_do_with_text.append(num)
 
-        # left only last one element from list, which is text to post
-        # set number of words and symbols in text to post
-        if list_of_action_to_do_with_text:
-            content_without_tags = content.split(">")[-1]
-            n = len(content_without_tags) + 1
-            print(content_without_tags, n)
+        # if we do not have any text formating action, just send a content and make a new line for next
+        if not list_of_action_to_do_with_text:
+            selenium_element.send_keys(content)
+            selenium_element.send_keys(Keys.ENTER)
 
-            # selenium_element.send_keys(content_without_tags)
-            # self.action.key_down(Keys.SHIFT).key_down(Keys.CONTROL).send_keys(
-            #     Keys.LEFT * n
-            # ).perform()
-            # self.action.reset_actions()
-            # time.sleep(5)
-            # for action in list_of_action_to_do_with_text:
-            #     text_modify_butttons[action].click()
-            #
-            # self.action.key_down(Keys.SHIFT).key_down(Keys.CONTROL).send_keys(Keys.RIGHT * n).perform()
-            # self.action.reset_actions()
-            #
-            # if 0 in list_of_action_to_do_with_text:
-            #     self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys("b").perform()
-            #     self.action.reset_actions()
-            # elif 1 in list_of_action_to_do_with_text:
-            #     self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys("i").perform()
-            #     self.action.reset_actions()
-            #
-            # self.action.key_down(Keys.ENTER).perform()
-            # self.action.reset_actions()
-            # self._time_patterns(2)
+        # condition if we have an ordered list or an unorderded list TAG
+        elif 5 in list_of_action_to_do_with_text or 6 in list_of_action_to_do_with_text:
+
+            content_without_tags = re.sub('<[^<>]+>', '', content)
+            n = len(content_without_tags) + self.check_if_url_in_content(
+                content_without_tags
+            )
+
             selenium_element.send_keys(content_without_tags)
-            self.action.key_down(Keys.SHIFT).send_keys(
-                Keys.LEFT * n
-            ).perform()
+            self.action.key_down(Keys.SHIFT).send_keys(Keys.LEFT * n).perform()
             self.action.reset_actions()
 
             time.sleep(5)
@@ -158,28 +151,48 @@ class FacebookPoster:
             for action in list_of_action_to_do_with_text:
                 text_modify_butttons[action].click()
 
-            self.action.key_down(Keys.SHIFT).send_keys(
-                Keys.RIGHT * n
-            ).perform()
+            self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * n).perform()
+            self.action.reset_actions()
+            time.sleep(2)
+
+            if 0 in list_of_action_to_do_with_text:
+                self.action.key_down(Keys.CONTROL).send_keys("b").perform()
+                self.action.reset_actions()
+            elif 1 in list_of_action_to_do_with_text:
+                self.action.key_down(Keys.CONTROL).send_keys("i").perform()
+                self.action.reset_actions()
+
+            selenium_element.send_keys(Keys.ENTER)
+            selenium_element.send_keys(Keys.ENTER)
+            self._time_patterns(2)
+
+        # condition for rest cases
+        else:
+            content_without_tags = re.sub('<[^<>]+>', '', content)
+            n = len(content_without_tags) + self.check_if_url_in_content(
+                content_without_tags
+            )
+
+            selenium_element.send_keys(content_without_tags)
+            self.action.key_down(Keys.SHIFT).send_keys(Keys.LEFT * n).perform()
+            self.action.reset_actions()
+            time.sleep(5)
+
+            for action in list_of_action_to_do_with_text:
+                text_modify_butttons[action].click()
+
+            self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * n).perform()
             self.action.reset_actions()
 
             if 0 in list_of_action_to_do_with_text:
-                self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys("b").perform()
+                self.action.key_down(Keys.CONTROL).send_keys("b").perform()
                 self.action.reset_actions()
             elif 1 in list_of_action_to_do_with_text:
-                self.action.send_keys(Keys.SPACE).key_down(Keys.CONTROL).send_keys("i").perform()
+                self.action.key_down(Keys.CONTROL).send_keys("i").perform()
                 self.action.reset_actions()
 
             selenium_element.send_keys(Keys.ENTER)
-            selenium_element.send_keys(Keys.ENTER)
-
-
-
-
-
-        else:
-            selenium_element.send_keys(content)
-            selenium_element.send_keys(Keys.ENTER)
+            self._time_patterns(2)
 
     def prepare_and_send_post(self, content_filename):
         fb_groups = ["https://www.facebook.com/groups/1281302162058634/"]
@@ -213,4 +226,6 @@ class FacebookPoster:
             # PLACE FOR NEW FUNCTION
 
 
-FacebookPoster(LOGIN_BETA, PASSWORD_BETA).prepare_and_send_post(content_filename='content/1.txt')
+FacebookPoster(LOGIN_BETA, PASSWORD_BETA).prepare_and_send_post(
+    content_filename="content/1.txt"
+)
