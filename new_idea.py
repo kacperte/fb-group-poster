@@ -118,26 +118,34 @@ class FacebookPoster:
         # Set empty list where we add text modifier trigger - reference to self.text_formatting_action (check __init__)
         list_of_action_to_do_with_text = []
 
-        # Check if text content contains ">" symbol - it's text modify tag i.e. <b> for bold text. If so, we itarate
-        # through list elements (without last one, which is out text to modify) to check how many text modifier trigger
-        # we have and then add them to list_of_action_to_do_with_text
-        # self.text_formatting_action <-- is a dict which contains text formating action description i.e. {0: "b"} for
-        # bold text
-        if re.findall(r'<(.+?)>', content):
-            for tag in re.findall(r'<(.+?)>', content):
+        if re.findall(r"<(.+?)>", content):
+            for tag in re.findall(r"<(.+?)>", content):
                 for num, val in self.text_formatting_action.items():
                     if val == tag:
                         list_of_action_to_do_with_text.append(num)
 
+        list_of_action_to_do_with_text_without_bold_and_italic = [
+            tag for tag in list_of_action_to_do_with_text if tag != 0 and tag != 1
+        ]
+
+        list_of_action_to_do_with_text_only_with_bold_and_italic = [
+            tag for tag in list_of_action_to_do_with_text if tag == 0 or tag == 1
+        ]
+
         # if we do not have any text formating action, just send a content and make a new line for next
-        if not list_of_action_to_do_with_text:
+        if (
+            not list_of_action_to_do_with_text_without_bold_and_italic
+            and not list_of_action_to_do_with_text_only_with_bold_and_italic
+        ):
             selenium_element.send_keys(content)
             selenium_element.send_keys(Keys.ENTER)
 
         # condition if we have an ordered list or an unorderded list TAG
-        elif 5 in list_of_action_to_do_with_text or 6 in list_of_action_to_do_with_text:
-
-            content_without_tags = re.sub('<[^<>]+>', '', content)
+        elif (
+            5 in list_of_action_to_do_with_text_without_bold_and_italic
+            or 6 in list_of_action_to_do_with_text_without_bold_and_italic
+        ):
+            content_without_tags = re.sub("<[^<>]+>", "", content)
             n = len(content_without_tags) + self.check_if_url_in_content(
                 content_without_tags
             )
@@ -146,29 +154,29 @@ class FacebookPoster:
             self.action.key_down(Keys.SHIFT).send_keys(Keys.LEFT * n).perform()
             self.action.reset_actions()
 
-            time.sleep(5)
+            self._time_patterns()
 
-            for action in list_of_action_to_do_with_text:
+            for action in list_of_action_to_do_with_text_without_bold_and_italic:
                 text_modify_butttons[action].click()
 
-            self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * n).perform()
-            self.action.reset_actions()
-            time.sleep(2)
+            # set cursor at the start of text
+            selenium_element.send_keys(Keys.LEFT)
 
-            if 0 in list_of_action_to_do_with_text:
+            if 0 in list_of_action_to_do_with_text_without_bold_and_italic:
                 self.action.key_down(Keys.CONTROL).send_keys("b").perform()
                 self.action.reset_actions()
-            elif 1 in list_of_action_to_do_with_text:
+            elif 1 in list_of_action_to_do_with_text_without_bold_and_italic:
                 self.action.key_down(Keys.CONTROL).send_keys("i").perform()
                 self.action.reset_actions()
 
-            selenium_element.send_keys(Keys.ENTER)
-            selenium_element.send_keys(Keys.ENTER)
-            self._time_patterns(2)
+            # selenium_element.send_keys(Keys.ENTER)
+            # selenium_element.send_keys(Keys.ENTER)
+            # self._time_patterns(2)
 
         # condition for rest cases
         else:
-            content_without_tags = re.sub('<[^<>]+>', '', content)
+            print(content, '3')
+            content_without_tags = re.sub("<[^<>]+>", "", content)
             n = len(content_without_tags) + self.check_if_url_in_content(
                 content_without_tags
             )
@@ -178,16 +186,16 @@ class FacebookPoster:
             self.action.reset_actions()
             time.sleep(5)
 
-            for action in list_of_action_to_do_with_text:
+            for action in list_of_action_to_do_with_text_without_bold_and_italic:
                 text_modify_butttons[action].click()
 
             self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * n).perform()
             self.action.reset_actions()
 
-            if 0 in list_of_action_to_do_with_text:
+            if 0 in list_of_action_to_do_with_text_without_bold_and_italic:
                 self.action.key_down(Keys.CONTROL).send_keys("b").perform()
                 self.action.reset_actions()
-            elif 1 in list_of_action_to_do_with_text:
+            elif 1 in list_of_action_to_do_with_text_without_bold_and_italic:
                 self.action.key_down(Keys.CONTROL).send_keys("i").perform()
                 self.action.reset_actions()
 
