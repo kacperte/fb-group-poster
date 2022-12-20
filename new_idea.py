@@ -109,6 +109,47 @@ class FacebookPoster:
             self.time_pattern = tp
             time.sleep(self.time_pattern)
 
+    def bold_and_italic_formatting(self, content: str, content_without_tags: str):
+        splited_content = [x for x in re.split(r"<(.+?)>", content) if x != ""]
+
+        steps = list()
+        temp_clean_text = content_without_tags
+        num = 0
+
+        for elem in splited_content:
+            if elem == "b" or elem == "i" or elem == "/i" or elem == "/b":
+                to_add = [num, elem]
+                steps.append(to_add)
+
+            elif elem in temp_clean_text:
+                if elem == ' ':
+                    continue
+                num_to_add = temp_clean_text.index(elem) + len(elem)
+                num = num_to_add
+
+        for action in steps:
+            for num, val in self.text_formatting_action.items():
+                if val in action[1]:
+                    action[1] = num
+                    break
+
+        action_to_execute = list()
+
+        while steps:
+            action = steps[0]
+            start = action[0]
+            text_formatter = action[1]
+            for equal_action in steps[1:]:
+                if equal_action[1] == text_formatter:
+                    end = equal_action[0]
+                    action_to_execute.append([start, end, text_formatter])
+
+                    steps.remove(equal_action)
+                    steps.remove(action)
+                    break
+
+        return action_to_execute
+
     def text_editor(self, content: str, selenium_element):
         # Locate text formatting panel
         text_modify_butttons = selenium_element.find_elements(
@@ -161,21 +202,49 @@ class FacebookPoster:
 
             # set cursor at the start of text
             selenium_element.send_keys(Keys.LEFT)
+            bold_and_italic_actions = self.bold_and_italic_formatting(
+                content=content, content_without_tags=content_without_tags
+            )
+            last_action = None
+            for action in bold_and_italic_actions:
+                if action[0] == 0:
+                    self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * int(action[1])).perform()
+                    text_modify_butttons[action[2]].click()
+                    self.action.reset_actions()
 
-            if 0 in list_of_action_to_do_with_text_without_bold_and_italic:
+                    self.action.send_keys(Keys.LEFT * int(action[1])).perform()
+                    self.action.reset_actions()
+                    last_action = action[2]
+
+                else:
+                    self.action.send_keys(Keys.RIGHT * int(action[0])).perform()
+                    self.action.reset_actions()
+
+                    self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * (int(action[1]) - int(action[0]))).perform()
+                    text_modify_butttons[action[2]].click()
+                    self.action.reset_actions()
+
+                    self.action.send_keys(Keys.LEFT * int(action[1])).perform()
+                    self.action.reset_actions()
+                    last_action = action[2]
+
+            selenium_element.send_keys(Keys.RIGHT * n)
+            print(last_action)
+
+            if last_action == 0:
                 self.action.key_down(Keys.CONTROL).send_keys("b").perform()
                 self.action.reset_actions()
-            elif 1 in list_of_action_to_do_with_text_without_bold_and_italic:
+            elif last_action == 1:
                 self.action.key_down(Keys.CONTROL).send_keys("i").perform()
                 self.action.reset_actions()
 
-            # selenium_element.send_keys(Keys.ENTER)
-            # selenium_element.send_keys(Keys.ENTER)
-            # self._time_patterns(2)
+            selenium_element.send_keys(Keys.ENTER)
+            selenium_element.send_keys(Keys.ENTER)
+            self._time_patterns(2)
 
         # condition for rest cases
         else:
-            print(content, '3')
+
             content_without_tags = re.sub("<[^<>]+>", "", content)
             n = len(content_without_tags) + self.check_if_url_in_content(
                 content_without_tags
@@ -189,13 +258,43 @@ class FacebookPoster:
             for action in list_of_action_to_do_with_text_without_bold_and_italic:
                 text_modify_butttons[action].click()
 
-            self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * n).perform()
-            self.action.reset_actions()
+            # set cursor at the start of text
+            selenium_element.send_keys(Keys.LEFT)
+            bold_and_italic_actions = self.bold_and_italic_formatting(
+                content=content, content_without_tags=content_without_tags
+            )
+            last_action = None
+            for action in bold_and_italic_actions:
+                if action[0] == 0:
+                    self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * int(action[1])).perform()
+                    text_modify_butttons[action[2]].click()
+                    self.action.reset_actions()
 
-            if 0 in list_of_action_to_do_with_text_without_bold_and_italic:
+                    self.action.send_keys(Keys.LEFT * int(action[1])).perform()
+                    self.action.reset_actions()
+                    last_action = action[2]
+
+                else:
+                    self.action.send_keys(Keys.RIGHT * int(action[0])).perform()
+                    self.action.reset_actions()
+
+                    self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * (int(action[1]) - int(action[0]))).perform()
+                    text_modify_butttons[action[2]].click()
+                    self.action.reset_actions()
+
+                    self.action.send_keys(Keys.LEFT * int(action[1])).perform()
+                    self.action.reset_actions()
+                    last_action = action[2]
+
+            selenium_element.send_keys(Keys.RIGHT * n)
+            print(last_action)
+            self._time_patterns(2)
+
+            if last_action == 0:
+                print("!")
                 self.action.key_down(Keys.CONTROL).send_keys("b").perform()
                 self.action.reset_actions()
-            elif 1 in list_of_action_to_do_with_text_without_bold_and_italic:
+            elif last_action == 1:
                 self.action.key_down(Keys.CONTROL).send_keys("i").perform()
                 self.action.reset_actions()
 
