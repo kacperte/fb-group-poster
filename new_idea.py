@@ -9,6 +9,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 import time
 import re
+import win32clipboard
 
 # login BETA
 LOGIN_BETA = "random2022@hsswork.pl"
@@ -66,13 +67,8 @@ class FacebookPoster:
         return content
 
     @staticmethod
-    def check_if_url_in_content(content: str) -> int:
-        cases = ["www", "https://", ".com", ".pl"]
-
-        for case in cases:
-            if case in content.lower():
-                return 1
-        return 0
+    def verify_cursor_position(text: str, to_check: str):
+        return re.search(to_check, text).start()
 
     def _login_to_facebook(self):
         # This function is to log into Facebook
@@ -122,7 +118,7 @@ class FacebookPoster:
                 steps.append(to_add)
 
             elif elem in temp_clean_text:
-                if elem == ' ':
+                if elem == " ":
                     continue
                 num_to_add = temp_clean_text.index(elem) + len(elem)
                 num = num_to_add
@@ -157,21 +153,22 @@ class FacebookPoster:
         )
 
         # Set empty list where we add text modifier trigger - reference to self.text_formatting_action (check __init__)
-        list_of_action_to_do_with_text = []
+        list_of_action_to_do_with_text_without_bold_and_italic = list()
+
+        list_of_action_to_do_with_text_only_with_bold_and_italic = list()
 
         if re.findall(r"<(.+?)>", content):
             for tag in re.findall(r"<(.+?)>", content):
                 for num, val in self.text_formatting_action.items():
                     if val == tag:
-                        list_of_action_to_do_with_text.append(num)
-
-        list_of_action_to_do_with_text_without_bold_and_italic = [
-            tag for tag in list_of_action_to_do_with_text if tag != 0 and tag != 1
-        ]
-
-        list_of_action_to_do_with_text_only_with_bold_and_italic = [
-            tag for tag in list_of_action_to_do_with_text if tag == 0 or tag == 1
-        ]
+                        if num == 0 or num == 1:
+                            list_of_action_to_do_with_text_only_with_bold_and_italic.append(
+                                num
+                            )
+                        else:
+                            list_of_action_to_do_with_text_without_bold_and_italic.append(
+                                num
+                            )
 
         # if we do not have any text formating action, just send a content and make a new line for next
         if (
@@ -181,125 +178,103 @@ class FacebookPoster:
             selenium_element.send_keys(content)
             selenium_element.send_keys(Keys.ENTER)
 
-        # condition if we have an ordered list or an unorderded list TAG
-        elif (
-            5 in list_of_action_to_do_with_text_without_bold_and_italic
-            or 6 in list_of_action_to_do_with_text_without_bold_and_italic
-        ):
+        else:
             content_without_tags = re.sub("<[^<>]+>", "", content)
-            n = len(content_without_tags) + self.check_if_url_in_content(
-                content_without_tags
-            )
+            n = len(content_without_tags)
 
             selenium_element.send_keys(content_without_tags)
             self.action.key_down(Keys.SHIFT).send_keys(Keys.LEFT * n).perform()
             self.action.reset_actions()
-
             self._time_patterns()
 
             for action in list_of_action_to_do_with_text_without_bold_and_italic:
                 text_modify_butttons[action].click()
+                self._time_patterns(2)
 
             # set cursor at the start of text
             selenium_element.send_keys(Keys.LEFT)
-            bold_and_italic_actions = self.bold_and_italic_formatting(
-                content=content, content_without_tags=content_without_tags
-            )
-            last_action = None
-            for action in bold_and_italic_actions:
-                if action[0] == 0:
-                    self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * int(action[1])).perform()
-                    text_modify_butttons[action[2]].click()
-                    self.action.reset_actions()
 
-                    self.action.send_keys(Keys.LEFT * int(action[1])).perform()
-                    self.action.reset_actions()
-                    last_action = action[2]
-
-                else:
-                    self.action.send_keys(Keys.RIGHT * int(action[0])).perform()
-                    self.action.reset_actions()
-
-                    self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * (int(action[1]) - int(action[0]))).perform()
-                    text_modify_butttons[action[2]].click()
-                    self.action.reset_actions()
-
-                    self.action.send_keys(Keys.LEFT * int(action[1])).perform()
-                    self.action.reset_actions()
-                    last_action = action[2]
-
-            selenium_element.send_keys(Keys.RIGHT * n)
-            print(last_action)
-
-            if last_action == 0:
-                self.action.key_down(Keys.CONTROL).send_keys("b").perform()
-                self.action.reset_actions()
-            elif last_action == 1:
-                self.action.key_down(Keys.CONTROL).send_keys("i").perform()
-                self.action.reset_actions()
-
-            selenium_element.send_keys(Keys.ENTER)
-            selenium_element.send_keys(Keys.ENTER)
-            self._time_patterns(2)
-
-        # condition for rest cases
-        else:
-
-            content_without_tags = re.sub("<[^<>]+>", "", content)
-            n = len(content_without_tags) + self.check_if_url_in_content(
-                content_without_tags
-            )
-
-            selenium_element.send_keys(content_without_tags)
-            self.action.key_down(Keys.SHIFT).send_keys(Keys.LEFT * n).perform()
+            self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * 2).perform()
             self.action.reset_actions()
-            time.sleep(5)
 
-            for action in list_of_action_to_do_with_text_without_bold_and_italic:
-                text_modify_butttons[action].click()
+            self.action.key_down(Keys.CONTROL).key_down('c').perform()
+            self.action.reset_actions()
 
-            # set cursor at the start of text
             selenium_element.send_keys(Keys.LEFT)
+
+            win32clipboard.OpenClipboard()
+            copied_text = win32clipboard.GetClipboardData()
+            win32clipboard.CloseClipboard()
+
+            n_to_move = self.verify_cursor_position(to_check=copied_text, text=content_without_tags)
+            n += n_to_move
+
+            selenium_element.send_keys(Keys.LEFT * n_to_move)
+
             bold_and_italic_actions = self.bold_and_italic_formatting(
                 content=content, content_without_tags=content_without_tags
             )
+
+            self._time_patterns(2)
             last_action = None
+
             for action in bold_and_italic_actions:
                 if action[0] == 0:
-                    self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * int(action[1])).perform()
+                    self.action.key_down(Keys.SHIFT).send_keys(
+                        Keys.RIGHT * int(action[1])
+                    ).perform()
                     text_modify_butttons[action[2]].click()
+                    self._time_patterns()
                     self.action.reset_actions()
 
+                    selenium_element.send_keys(Keys.RIGHT)
                     self.action.send_keys(Keys.LEFT * int(action[1])).perform()
                     self.action.reset_actions()
+                    self._time_patterns()
+
                     last_action = action[2]
 
                 else:
                     self.action.send_keys(Keys.RIGHT * int(action[0])).perform()
                     self.action.reset_actions()
 
-                    self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * (int(action[1]) - int(action[0]))).perform()
+                    self.action.key_down(Keys.SHIFT).send_keys(
+                        Keys.RIGHT * (int(action[1]) - int(action[0]))
+                    ).perform()
                     text_modify_butttons[action[2]].click()
+                    self._time_patterns()
                     self.action.reset_actions()
 
+                    selenium_element.send_keys(Keys.RIGHT)
                     self.action.send_keys(Keys.LEFT * int(action[1])).perform()
                     self.action.reset_actions()
+                    self._time_patterns()
+
                     last_action = action[2]
 
             selenium_element.send_keys(Keys.RIGHT * n)
-            print(last_action)
-            self._time_patterns(2)
 
-            if last_action == 0:
-                print("!")
-                self.action.key_down(Keys.CONTROL).send_keys("b").perform()
-                self.action.reset_actions()
-            elif last_action == 1:
-                self.action.key_down(Keys.CONTROL).send_keys("i").perform()
-                self.action.reset_actions()
+            # if last_action == 0:
+            #     print('b')
+            #     time.sleep(2)
+            #     self.action.key_down(Keys.CONTROL).send_keys("b").perform()
+            #     self.action.reset_actions()
+            # elif last_action == 1:
+            #     print('i')
+            #     time.sleep(2)
+            #     self.action.key_down(Keys.CONTROL).send_keys("i").perform()
+            #     self.action.reset_actions()
 
-            selenium_element.send_keys(Keys.ENTER)
-            self._time_patterns(2)
+            if (
+                5 in list_of_action_to_do_with_text_without_bold_and_italic
+                or 6 in list_of_action_to_do_with_text_without_bold_and_italic
+            ):
+                selenium_element.send_keys(Keys.ENTER)
+                selenium_element.send_keys(Keys.ENTER)
+
+            else:
+                selenium_element.send_keys(Keys.ENTER)
+                self._time_patterns(2)
 
     def prepare_and_send_post(self, content_filename):
         fb_groups = ["https://www.facebook.com/groups/1281302162058634/"]
@@ -329,8 +304,6 @@ class FacebookPoster:
 
             for line in content.split("\n"):
                 self.text_editor(content=line, selenium_element=postbox)
-
-            # PLACE FOR NEW FUNCTION
 
 
 FacebookPoster(LOGIN_BETA, PASSWORD_BETA).prepare_and_send_post(
