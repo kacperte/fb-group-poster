@@ -19,20 +19,23 @@ PASSWORD_BETA = "Ewelina2022"
 class FacebookPoster:
     def __init__(self, login, password):
 
-        # For facebook login id credentials
+        # Facebook login id credentials
         self.login = login
 
-        # For facebook login password credentials
+        # Facebook login password credentials
         self.password = password
 
         # Facebook page url
         self.base_url = "https://www.facebook.com/"
 
         # Setup Selenium Options
-        # Add binary location for Firefox which is mandatory and headless mode on
         options = Options()
+
+        # Add binary location for Firefox which is mandatory and headless mode on
         options.binary_location = r"C:\Program Files\Mozilla Firefox\firefox.exe"
+
         # options.add_argument("--headless")
+        #options.add_argument("--headless")
 
         # Setup Firefox driver
         self.driver = Firefox(
@@ -57,52 +60,88 @@ class FacebookPoster:
             6: "ol",  # ordered list
         }
 
-        # Run function to log into Facebook accocutn
+        # Run function to log into Facebook account
         self._login_to_facebook()
 
     @staticmethod
     def get_txt(filename):
+        """
+        Function that open text file and return content inside it.
+        :param filename: File path
+        :return: str
+        """
+        # Open file in read mode with ut-8 encode
         with open(filename, "r", encoding="utf-8") as file:
             content = file.read()
+
         return content
 
     def move_cursor_to_start(self, content: str, selenium_element):
+        """
+        Function that move cursor to the start of the line if it is in the wrong position.
+        :param content: File path
+        :param selenium_element: Location to web element we point with selenium
+        :return: int
+        """
+
+        # With action chain, we select three character (after this, we reset action chain)
         self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * 3).perform()
         self.action.reset_actions()
 
+        # With action chain, we copy a selected characters (after this, we reset action chain)
         self.action.key_down(Keys.CONTROL).key_down("c").perform()
         self.action.reset_actions()
 
+        # Unselect selected characters
         selenium_element.send_keys(Keys.LEFT)
 
+        # Copy selected characters from clipborad and assign to variable (copied_text)
         win32clipboard.OpenClipboard()
         copied_text = win32clipboard.GetClipboardData()
         win32clipboard.CloseClipboard()
 
-        n_to_move = re.search(copied_text, content).start()
+        # We are checking the index of the copied characters. If all is ok, it should be 0 and be
+        # located at the start of the line
+        n_to_move = content.find(copied_text)
 
-        for _ in range(n_to_move):
-            selenium_element.send_keys(Keys.LEFT)
-            self._time_patterns(2)
+        # If n_to_move is bigger than 0, we have to move cursor by n_to_move position to left (to the start of the line)
+        if n_to_move > 0:
+            for _ in range(n_to_move):
+                selenium_element.send_keys(Keys.LEFT)
+                self._time_patterns(2)
 
         return n_to_move
 
     def move_cursor_to_end(self, content: str, selenium_element):
+        """
+        Function that move cursor to the end of the line if it is in the wrong position.
+        :param content: File path
+        :param selenium_element: Location to web element we point with selenium
+        :return: int
+        """
+        # With action chain, we select three character (after this, we reset action chain)
         self.action.key_down(Keys.SHIFT).send_keys(Keys.LEFT * 3).perform()
         self.action.reset_actions()
 
+        # With action chain, we copy a selected characters (after this, we reset action chain)
         self.action.key_down(Keys.CONTROL).key_down("c").perform()
         self.action.reset_actions()
 
+        # Unselect selected characters
         selenium_element.send_keys(Keys.RIGHT)
 
+        # Copy selected characters from clipborad and assign to variable (copied_text)
         win32clipboard.OpenClipboard()
         copied_text = win32clipboard.GetClipboardData()
         win32clipboard.CloseClipboard()
 
-        n_to_move = re.search(copied_text, content).end()
+        # We are checking the index of the copied characters. If all is ok, it should be as lenght of the content and
+        # be located at the end of the line
+        n_to_move = content.find(copied_text)
+        # Substract lenght of the conten and postition of
         n_to_move = len(content) - n_to_move
 
+        # If n_to_move is bigger than 0, we have to move cursor by n_to_move position to right (to the end of the line)
         if n_to_move > 0:
             for _ in range(n_to_move):
                 selenium_element.send_keys(Keys.RIGHT)
@@ -111,36 +150,47 @@ class FacebookPoster:
         return n_to_move
 
     def _login_to_facebook(self):
-        # This function is to log into Facebook
-
+        """
+        This function is to log into Facebook
+        :return:
+        """
+        # Open Facebook at logging site
         self.driver.get(self.base_url)
+
+        # Find cookie popup button and close it
         self.driver.find_element(
             By.XPATH,
             "//button[text()='Zezwól na korzystanie z niezbędnych i opcjonalnych plików cookie']",
         ).click()
 
-        # For pausing the script for sometime
+        # For pausing the script for some time
         self._time_patterns(3)
 
+        # Send login and password
         self.driver.find_element(By.ID, "email").send_keys(self.login)
         self.driver.find_element(By.ID, "pass").send_keys(self.password)
 
-        # For pausing the script for sometime
+        # For pausing the script for some time
         self._time_patterns(3)
 
+        # Click login button
         self.driver.find_element(By.XPATH, "//button[text()='Zaloguj się']").click()
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, "facebook"))
         )
 
     def _time_patterns(self, tp=None):
-        # This function is to pause the script for some time
-        # Also takes argument as second,
-        # If not given then it will
-        # Take by default seconds to wait
+        """
+        This function is to pause the script for some time
+        :param tp: Time pattern in seconds
+        :return:
+        """
+
+        # Check if time pattern is set as default
         if tp is None:
             time.sleep(self.time_pattern)
 
+        # If not set time pattern as argument passed in function
         else:
             self.time_pattern = tp
             time.sleep(self.time_pattern)
@@ -152,40 +202,78 @@ class FacebookPoster:
         selenium_element,
         text_modify_butttons,
     ):
+        """
+        The function performs bolding and italicizing of text. Iterating through the text, it determines the start and
+        end index where the text is formatted and assigns a method to it (0 - bold; 1 - italic)
+        :param content: Line of text with text formatting tags (i.e. <b>)
+        :param content_without_tags: Line of text out text formatting tags
+        :param selenium_element: Location to web element we point with selenium
+        :param text_modify_butttons: Location to web element with text modifier buttons
+        :return: list - i.e. (1, 20, 1) (start_index, end_index, method)
+        """
+        # Split text into text content and text formatting tags
         splited_content = [x for x in re.split(r"<(.+?)>", content) if x != ""]
 
+        # Init var steps as empty list
         steps = list()
+
+        # Init var temp_clean_text as content_without_tags
         temp_clean_text = content_without_tags
+
+        # Init var num as 0 - it will be simulated the current text index
         num = 0
 
+        # Iterate through splited_content to find out where start and end (index) text formatting tags
         for elem in splited_content:
+            # If we encounter bold tag or italic tag, it creates a list which contain two element
+            # (position_where_tag_start/end, text formatting tag). Then it's add to steps list
             if elem == "b" or elem == "i" or elem == "/i" or elem == "/b":
                 to_add = [num, elem]
                 steps.append(to_add)
 
+            # If element is not a text formatting tags, check how ow many characters it has and then add to num
+            # variable.
             elif elem in temp_clean_text:
+                # For some reasons, regex create some empty string after it has split text. So we have to ignore this
                 if elem == " ":
                     continue
                 num_to_add = temp_clean_text.index(elem) + len(elem)
                 num = num_to_add
 
+        # Every element in steps list look like this (1, b) or (5, b). Every text formatting method has equivalent in
+        # integer (we set dict wiht that information in self.text_formatting_action). Code below swaps this information
         for action in steps:
             for num, val in self.text_formatting_action.items():
                 if val in action[1]:
                     action[1] = num
                     break
 
+        # Init var action_to_execute as empty list
         action_to_execute = list()
 
+        # In this step we marge start index and end index action for single text formatting tag. Final element in
+        # action_to_execute list should look like this (1, 10, 0) (start_index, end_index, method)
         while steps:
+            # Init var action as first element from steps list
             action = steps[0]
+
+            # Init var start as first element from action (1-st element is start index)
             start = action[0]
+
+            # Init var text_formatter as second element from action (2-nd element is text formatting tag)
             text_formatter = action[1]
+
+            # Itarate through rest steps list to find next list with the same text formatting tag
             for equal_action in steps[1:]:
                 if equal_action[1] == text_formatter:
+                    # Init var end as first element from equal_action (1-st element is start index but in this
+                    # case is end)
                     end = equal_action[0]
+
+                    # Add prepare list to action_to_execute list
                     action_to_execute.append([start, end, text_formatter])
 
+                    # Remove both list from steps list and return to main loop
                     steps.remove(equal_action)
                     steps.remove(action)
                     break
@@ -246,7 +334,7 @@ class FacebookPoster:
 
         return is_formatting_on, last_action
 
-    def text_editor(self, content: str, selenium_element):
+    def send_post(self, content: str, selenium_element):
         # Locate text formatting panel
         text_modify_butttons = selenium_element.find_elements(
             By.XPATH, "//span[@class='x12mruv9 xfs2ol5 x1gslohp x12nagc']"
@@ -360,7 +448,7 @@ class FacebookPoster:
             content = self.get_txt(content_filename)
 
             for line in content.split("\n"):
-                self.text_editor(content=line, selenium_element=postbox)
+                self.send_post(content=line, selenium_element=postbox)
 
 
 FacebookPoster(LOGIN_BETA, PASSWORD_BETA).prepare_and_send_post(
