@@ -20,6 +20,7 @@ class FacebookPoster:
     """
     A class representing a bot for posting in groups on Facebook.
     """
+
     def __init__(self, login, password):
         """
         Initializes the attributes of the class.
@@ -197,20 +198,21 @@ class FacebookPoster:
             time.sleep(self.time_pattern)
 
     def bold_and_italic_formatting(
-        self,
-        content: str,
-        content_without_tags: str,
-        selenium_element,
-        text_modify_butttons,
+            self,
+            content: str,
+            content_without_tags: str,
+            selenium_element,
+            text_modify_butttons,
     ):
         """
-        The function performs bolding and italicizing of text. Iterating through the text, it determines the start and
-        end index where the text is formatted and assigns a method to it (0 - bold; 1 - italic)
-        :param content: Line of text with text formatting tags (i.e. <b>)
-        :param content_without_tags: Line of text out text formatting tags
-        :param selenium_element: Location to web element we point with selenium
-        :param text_modify_butttons: Location to web element with text modifier buttons
-        :return: (bool, bool) Return two bool value which is necessary to switch off Facebook glitch
+        This function performs bolding and italicizing of text by determining the start and end index of the formatted
+        text and assigning a method to it (0 for bold, 1 for italic).
+
+        :param content: a line of text with text formatting tags (e.g. <b>)
+        :param content_without_tags: a line of text without text formatting tags
+        :param selenium_element: a web element that we point to with selenium
+        :param text_modify_butttons: a web element with text modifier buttons
+        :return: a tuple of two boolean values, which is necessary to switch off a Facebook glitch
         """
         # Split text into text content and text formatting tags
         splited_content = [x for x in re.split(r"<(.+?)>", content) if x != ""]
@@ -224,68 +226,76 @@ class FacebookPoster:
         # Init var num as 0 - it will be simulated the current text index
         num = 0
 
-        # Iterate through splited_content to find out where start and end (index) text formatting tags
-        tags = ["b", "i", "/i", "/b"]
+        # Iterate through splited_content to find the start and end indexes of text formatting tags
+        tags = ["b", "i", "/i", "/b"]  # tags to look for
         for elem in splited_content:
-            # If we encounter bold tag or italic tag, it creates a list which contain two element
-            # (position_where_tag_start/end, text formatting tag). Then it's add to steps list
+            # If we encounter a bold or italic tag, create a list containing the start/end index and the text formatting
+            # tag and add it to the steps list
             if elem in tags:
                 steps.append([num, elem])
 
-            # If element is not a text formatting tags, check how ow many characters it has and then add to num
-            # variable.
-            # For some reasons, regex create some empty string after it has split text. So we have to ignore this
+            # If the element is not a text formatting tag, check how many characters it has and add it to
+            # the num variable.
+            # Ignore empty strings that may be created by the regex split.
             elif elem in temp_clean_text and elem != " ":
                 num_to_add = temp_clean_text.index(elem) + len(elem)
                 num = num_to_add
 
-        for tag in steps:
+        for tag in steps:  # remove / character from list
             tag[1] = tag[1].replace("/", "")
 
-        # Every element in steps list look like this (1, b) or (5, b). Every text formatting method has equivalent in
-        # integer (we set dict wiht that information in self.text_formatting_action). Code below swaps this information
+        # Every element in the steps list is a tuple with two elements, such as (1, b) or (5, b).
+        # The second element of the tuple represents a text formatting method, which has an equivalent integer value.
+        # This information is stored in the self.text_formatting_action dictionary.
+        # The code below swaps the text formatting method with its equivalent integer value.on
         mapping = {val: num for num, val in self.text_formatting_action.items()}
         for action in steps:
             if action[1] in mapping:
                 action[1] = mapping[action[1]]
 
-        # Init var action_to_execute as empty list
+        # Initialize an empty list to store the text formatting actions to be executed
         action_to_execute = list()
 
-        # In this step, we join start index and end index action for a single text formatting tag. One of the final
-        # element in action_to_execute list should look like this (1, 10, 0) (start_index, end_index, method)
+        # In this step, we join the start and end indexes of actions for a single text formatting tag. One of the
+        # final elements in the action_to_execute list should look like this (1, 10, 0) (start_index, end_index,
+        # method)
         while steps:
-            # Init var action as first element from steps list
+            # Set the first element in the steps list as the current action
             action = steps[0]
 
-            # Init var start as first element from action (1-st element is start index)
+            # Set the start index as the first element of the action tuple (the first element is the start index)
             start = action[0]
 
-            # Init var text_formatter as second element from action (2-nd element is text formatting tag)
+            # Set the text formatter as the second element of the action tuple (the second element is the text
+            # formatting tag)
             text_formatter = action[1]
-            # Itarate through rest steps list to find next list with the same text formatting tag
+
+            # Iterate through the remaining elements in the steps list to find the next action with the same text
+            # formatting tag
             for equal_action in steps[1:]:
                 if equal_action[1] == text_formatter:
-                    # Init var end as first element from equal_action (1-st element is start index but in this
-                    # case is end)
+                    # Set the end index as the first element of the equal_action tuple (the first element is the end
+                    # index)
                     end = equal_action[0]
 
-                    # Add prepare list to action_to_execute list
+                    # Add the prepared list to the action_to_execute list
                     action_to_execute.append([start, end, text_formatter])
 
-                    # Remove both list from steps list and return to main loop
+                    # Remove both lists from the steps list and return to the main loop
                     steps.remove(equal_action)
                     steps.remove(action)
                     break
-        # Init var is_formatting_on and last_action as None
+
+        # # Initialize the is_formatting_on and last_action variables as None
         is_formatting_on = None
         last_action = None
 
-        # Iterate through actions
+        # Iterate through the actions in the action_to_execute list
         for action in action_to_execute:
-            # If text fortatting start from first letters
+            # If the formatting starts at the first character in the line
             if action[0] == 0:
-                # Press and hold SHIFT and move cursor by n places to left
+                # Press and hold SHIFT and move the cursor to the right by the number of characters specified in
+                # action[1]
                 self.action.key_down(Keys.SHIFT).send_keys(
                     Keys.RIGHT * int(action[1])
                 ).perform()
@@ -297,7 +307,7 @@ class FacebookPoster:
                 # For pausing the script for some time
                 self._time_patterns()
 
-                # Unselect selected characters
+                # Unselect the selected characters
                 selenium_element.send_keys(Keys.RIGHT)
 
                 # Move back to the start of the line (after this, we reset action chain)
@@ -307,15 +317,15 @@ class FacebookPoster:
                 # For pausing the script for some time
                 self._time_patterns()
 
-                # Check if we back to proper place - if not correct it
+                # Check if we back to correct  place - if not correct it
                 n_to_move = self.move_cursor_to_start(
                     content=content_without_tags, selenium_element=selenium_element
                 )
                 selenium_element.send_keys(Keys.LEFT * n_to_move)
 
-                # There is a glitch in Facebook text box - if our last word is formatting, the formatting will be moved
-                # to next line. So we have to check this condition  and if it's True, save this information to variables
-                # which are need to switch this off
+                # There is a glitch in the Facebook text box - if our last word has formatting, the formatting will
+                # be moved to the next line. So we have to check for this condition and if it's True,
+                # save this information to variables which are needed to switch this off
                 if action[1] == len(content_without_tags):
                     is_formatting_on = True
                     last_action = action[2]
@@ -337,7 +347,7 @@ class FacebookPoster:
                 # For pausing the script for some time
                 self._time_patterns()
 
-                # Unselect selected characters
+                # Unselect the selected characters
                 selenium_element.send_keys(Keys.RIGHT)
 
                 # Move back to the start of the line (after this, we reset action chain)
@@ -347,15 +357,15 @@ class FacebookPoster:
                 # For pausing the script for some time
                 self._time_patterns()
 
-                # Check if we back to proper place - if not correct it
+                # Check if we back to correct place - if not correct it
                 n_to_move = self.move_cursor_to_start(
                     content=content_without_tags, selenium_element=selenium_element
                 )
                 selenium_element.send_keys(Keys.LEFT * n_to_move)
 
-                # There is a glitch in Facebook text box - if our last word is formatting, the formatting will be moved
-                # to next line. So we have to check this condition  and if it's True, save this information to variables
-                # which are need to switch this off
+                # There is a glitch in the Facebook text box - if our last word has formatting, the formatting will
+                # be moved to the next line. So we have to check for this condition and if it's True,
+                # save this information to variables which are needed to switch this off
                 if action[1] == len(content_without_tags):
                     is_formatting_on = True
                     last_action = action[2]
@@ -364,60 +374,62 @@ class FacebookPoster:
 
     def send_post(self, content: str, selenium_element):
         """
-        Function that sending content to Facebook Text Box and formatting it according to text formatting tags
-        :param content: File path
-        :param selenium_element: Location to web element we point with selenium
+        Sends the given `content` string to the Facebook text box element specified by `selenium_element` and applies
+        text formatting according to formatting tags in the `content` string.
+        :param content: The string to be sent to the Facebook text box
+        :param selenium_element: A Selenium web element object representing the Facebook text box element.
         """
-        # Locate text formatting box
+        # Find the text formatting buttons in the Facebook text box
         text_modify_butttons = selenium_element.find_elements(
             By.XPATH, "//span[@class='x12mruv9 xfs2ol5 x1gslohp x12nagc']"
         )
 
-        # Set empty list where we add text formatting tags - one for action without bold and italic and second for bold
-        # and italic tags
+        # Initialize empty lists to store text formatting actions for text without bold and italic formatting,
+        # and text with only bold and italic formatting
         list_of_action_to_do_with_text_without_bold_and_italic = list()
         list_of_action_to_do_with_text_only_with_bold_and_italic = list()
 
-        # Init var tags to store list with whole text formatting tags from text content
+        # Find all text formatting tags in the `content` string
         tags = re.findall(r"<(.+?)>", content)
 
-        # If any tags in text content
+        # If there are any tags in the `content` string
         if tags:
-            # Iterate through tag in tags list
-            for tag in tags:
-                # Then take num and val from dictionary where we describe text formatting tag (i.e. 'b':0)
-                for num, val in self.text_formatting_action.items():
-                    # When val (i.e. 'b') is equal tag
-                    if val == tag:
-                        # To seperate bold and italic formatting from another tags, just check it and add to proper list
-                        if num in (0, 1):
-                            list_of_action_to_do_with_text_only_with_bold_and_italic.append(
-                                num
-                            )
-                        # List for rest of text formatting actions
-                        else:
-                            list_of_action_to_do_with_text_without_bold_and_italic.append(
-                                num
-                            )
+            # Create a dictionary mapping the tag strings to their corresponding values in the
+            # `self.text_formatting_action` dictionary
+            tag_values = {
+                val: num
+                for num, val in self.text_formatting_action.items()
+                if val in tags
+            }
 
-        # If we do not have any text formating action, just send a content and make a new line for next
+            # Initialize empty lists to store text formatting actions for text without bold and italic formatting,
+            # and text with only bold and italic formatting
+            list_of_action_to_do_with_text_without_bold_and_italic = [
+                num for num in tag_values.values() if num not in (0, 1)
+            ]
+            list_of_action_to_do_with_text_only_with_bold_and_italic = [
+                num for num in tag_values.values() if num in (0, 1)
+            ]
+
+        # If there are no text formatting actions to perform
         if (
-            not list_of_action_to_do_with_text_without_bold_and_italic
-            and not list_of_action_to_do_with_text_only_with_bold_and_italic
+                not list_of_action_to_do_with_text_without_bold_and_italic
+                and not list_of_action_to_do_with_text_only_with_bold_and_italic
         ):
-            # Send content and make a new line
+            # Send the `content` to the Facebook text box and create a new line
             selenium_element.send_keys(content)
             selenium_element.send_keys(Keys.ENTER)
 
-        # If we have text formatting
+        # If there are text formatting actions to perform
+
         else:
-            # Init var content_without_tags where we store contenct without text formatting tags
+            # Store the content without text formatting tags in `content_without_tags`
             content_without_tags = re.sub("<[^<>]+>", "", content)
 
             # Init var n where we store lenght of content_without_tags
             n = len(content_without_tags)
 
-            # Send content
+            # Send the `content_without_tags` to the Facebook text box
             selenium_element.send_keys(content_without_tags)
 
             # Press and hold Shift then press left by n times (after this, we reset action chain)
@@ -427,7 +439,8 @@ class FacebookPoster:
             # For pausing the script for some time
             self._time_patterns()
 
-            # Iterate through action in list and click proper button to trigger them
+            # Iterate through actions in `list_of_actions_without_bold_and_italic` and click the corresponding button
+            # to trigger the action
             for action in list_of_action_to_do_with_text_without_bold_and_italic:
                 text_modify_butttons[action].click()
 
@@ -437,7 +450,7 @@ class FacebookPoster:
             # Set cursor at the start of text
             selenium_element.send_keys(Keys.LEFT)
 
-            # Check if we back to proper place - if not correct it
+            # Check if the cursor is at the start of the line and move it if necessary
             n_to_move = self.move_cursor_to_start(
                 content=content_without_tags, selenium_element=selenium_element
             )
@@ -445,8 +458,7 @@ class FacebookPoster:
             # Add n_to_move to variable when we store lenght of content to correct proper lenght
             n += n_to_move
 
-            # Switch on bold and italic formatting and assign two variable is_formatting, last_action to fix FB glitch
-            # (describe in 323 line)
+            # Apply bold and italic formatting and fix the Facebook glitch if necessary
             is_formatting, last_action = self.bold_and_italic_formatting(
                 content=content,
                 content_without_tags=content_without_tags,
@@ -457,28 +469,26 @@ class FacebookPoster:
             # For pausing the script for some time
             self._time_patterns()
 
-            # Move cursor to the end of line
+            # Move the cursor to the end of the line
             selenium_element.send_keys(Keys.RIGHT * n)
 
-            # Check if we back to proper place - if not correct i
+            # Check if the cursor is at the end of the line and move it if necessary
             self.move_cursor_to_end(content=content, selenium_element=selenium_element)
 
-            # If last word was bold or italic, we have to switch it off before make new line
+            # If the last word was bold or italic, turn off the formatting before creating a new line
             if is_formatting:
-                action = self.action
-                key = "b" if last_action == 0 else "i"
-                action.key_down(Keys.CONTROL).send_keys(key).perform()
-                action.reset_actions()
+                self.action.key_down(Keys.CONTROL).send_keys("b" if last_action == 0 else "i").perform()
+                self.action.reset_actions()
 
-            # If we use order or unorder list format we have to press Enter two times to switch off this formatting
+            # If the text has a list formatting, press Enter twice to turn off the formatting
             if (
-                5 in list_of_action_to_do_with_text_without_bold_and_italic
-                or 6 in list_of_action_to_do_with_text_without_bold_and_italic
+                    5 in list_of_action_to_do_with_text_without_bold_and_italic
+                    or 6 in list_of_action_to_do_with_text_without_bold_and_italic
             ):
                 selenium_element.send_keys(Keys.ENTER)
                 selenium_element.send_keys(Keys.ENTER)
 
-            # In any other case press one time Enter will be ok
+            # In any other case, press Enter once
             else:
                 selenium_element.send_keys(Keys.ENTER)
 
