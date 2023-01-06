@@ -11,6 +11,7 @@ import time
 import re
 import win32clipboard
 
+
 # login BETA
 LOGIN_BETA = "random2022@hsswork.pl"
 PASSWORD_BETA = "Ewelina2022"
@@ -84,16 +85,42 @@ class FacebookPoster:
             content = file.read()
         return content
 
-    def move_cursor_to_start(self, content: str, selenium_element):
+    def move_cursor(
+        self, content: str, selenium_element, direction: str, position=None
+    ):
         """
-        Move cursor to the start of the line if it is in the wrong position.
+        Move cursor to the specified position of the line.
         :param content: File path
         :param selenium_element: Location to web element we point with selenium
+        :param direction: "start", "end" or "position"
+        :param position: int or None (if direction is not "position")
         :return: int
         """
+        if direction not in ["start", "end", "position"]:
+            raise ValueError(
+                "Invalid value for argument 'direction'. Expected 'start', 'end' or 'position'."
+            )
 
-        # Select three characters
-        self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * 3).perform()
+        if direction == "position" and (
+            position is None or not isinstance(position, int)
+        ):
+            raise ValueError(
+                "Invalid value for argument 'position'. Expected int or None."
+            )
+
+            # Select three characters
+        if direction == "start":
+            self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * 3).perform()
+            move_key = Keys.LEFT
+        elif direction == "end":
+            self.action.key_down(Keys.SHIFT).send_keys(Keys.LEFT * 3).perform()
+            move_key = Keys.RIGHT
+            n_to_move = len(content)
+        else:
+            self.action.send_keys(Keys.RIGHT * position)
+            self.action.key_down(Keys.SHIFT).send_keys(Keys.LEFT * 3).perform()
+            move_key = Keys.RIGHT
+            n_to_move = position
         self.action.reset_actions()
 
         # Copy selected characters
@@ -101,7 +128,7 @@ class FacebookPoster:
         self.action.reset_actions()
 
         # Unselect selected characters
-        selenium_element.send_keys(Keys.LEFT)
+        selenium_element.send_keys(move_key)
 
         # Get copied characters from clipboard
         win32clipboard.OpenClipboard()
@@ -109,44 +136,16 @@ class FacebookPoster:
         win32clipboard.CloseClipboard()
 
         # Calculate number of characters to move
-        n_to_move = content.find(copied_text)
+        if direction == "position":
+            n_to_move -= content.find(copied_text) + 3
+        elif direction == "end":
+            n_to_move -= content.find(copied_text)
+        else:
+            n_to_move = content.find(copied_text)
 
-        # Move cursor to the start of the line
-        for _ in range(n_to_move):
-            selenium_element.send_keys(Keys.LEFT)
-            self._time_patterns(2)
-
-        return n_to_move
-
-    def move_cursor_to_end(self, content: str, selenium_element):
-        """
-        Move cursor to the end of the line if it is in the wrong position.
-        :param content: File path
-        :param selenium_element: Location to web element we point with selenium
-        :return: int
-        """
-        # Select three characters
-        self.action.key_down(Keys.SHIFT).send_keys(Keys.LEFT * 3).perform()
-        self.action.reset_actions()
-
-        # Copy selected characters
-        self.action.key_down(Keys.CONTROL).key_down("c").perform()
-        self.action.reset_actions()
-
-        # Unselect selected characters
-        selenium_element.send_keys(Keys.RIGHT)
-
-        # Get copied characters from clipboard
-        win32clipboard.OpenClipboard()
-        copied_text = win32clipboard.GetClipboardData()
-        win32clipboard.CloseClipboard()
-
-        # Calculate number of characters to move
-        n_to_move = len(content) - content.find(copied_text)
-
-        # Move cursor to the end of the line
-        for _ in range(n_to_move):
-            selenium_element.send_keys(Keys.RIGHT)
+        if direction != "position":
+            # Move cursor to the specified position
+            selenium_element.send_keys(move_key * n_to_move)
             self._time_patterns(2)
 
         return n_to_move
@@ -198,11 +197,11 @@ class FacebookPoster:
             time.sleep(self.time_pattern)
 
     def bold_and_italic_formatting(
-            self,
-            content: str,
-            content_without_tags: str,
-            selenium_element,
-            text_modify_butttons,
+        self,
+        content: str,
+        content_without_tags: str,
+        selenium_element,
+        text_modify_butttons,
     ):
         """
         This function performs bolding and italicizing of text by determining the start and end index of the formatted
@@ -294,10 +293,18 @@ class FacebookPoster:
         for action in action_to_execute:
             # If the formatting starts at the first character in the line
             if action[0] == 0:
+                n_to_move = self.move_cursor(
+                    content=content_without_tags,
+                    selenium_element=selenium_element,
+                    direction="position",
+                    position=action[1],
+                )
+                self.action.send_keys(Keys.LEFT * action[1])
+
                 # Press and hold SHIFT and move the cursor to the right by the number of characters specified in
                 # action[1]
                 self.action.key_down(Keys.SHIFT).send_keys(
-                    Keys.RIGHT * int(action[1])
+                    Keys.RIGHT * int(action[1] + n_to_move)
                 ).perform()
 
                 # Click text formatting button (after this, we reset action chain)
@@ -318,10 +325,14 @@ class FacebookPoster:
                 self._time_patterns()
 
                 # Check if we back to correct  place - if not correct it
-                n_to_move = self.move_cursor_to_start(
-                    content=content_without_tags, selenium_element=selenium_element
+                self.move_cursor(
+                    content=content_without_tags,
+                    selenium_element=selenium_element,
+                    direction="start",
                 )
-                selenium_element.send_keys(Keys.LEFT * n_to_move)
+                # n_to_move = self.move_cursor_to_start(
+                #     content=content_without_tags, selenium_element=selenium_element
+                # )
 
                 # There is a glitch in the Facebook text box - if our last word has formatting, the formatting will
                 # be moved to the next line. So we have to check for this condition and if it's True,
@@ -331,8 +342,16 @@ class FacebookPoster:
                     last_action = action[2]
 
             else:
+                n_to_move = self.move_cursor(
+                    content=content_without_tags,
+                    selenium_element=selenium_element,
+                    direction="position",
+                    position=action[1],
+                )
+                self.action.send_keys(Keys.LEFT * action[1])
+
                 # Press and hold SHIFT and move cursor by n places to left
-                self.action.send_keys(Keys.RIGHT * int(action[0])).perform()
+                self.action.send_keys(Keys.RIGHT * int(action[0] + n_to_move)).perform()
                 self.action.reset_actions()
 
                 # Click text formatting button (after this, we reset action chain)
@@ -358,10 +377,14 @@ class FacebookPoster:
                 self._time_patterns()
 
                 # Check if we back to correct place - if not correct it
-                n_to_move = self.move_cursor_to_start(
-                    content=content_without_tags, selenium_element=selenium_element
+                self.move_cursor(
+                    content=content_without_tags,
+                    selenium_element=selenium_element,
+                    direction="start",
                 )
-                selenium_element.send_keys(Keys.LEFT * n_to_move)
+                # n_to_move = self.move_cursor_to_start(
+                #     content=content_without_tags, selenium_element=selenium_element
+                # )
 
                 # There is a glitch in the Facebook text box - if our last word has formatting, the formatting will
                 # be moved to the next line. So we have to check for this condition and if it's True,
@@ -413,8 +436,8 @@ class FacebookPoster:
 
         # If there are no text formatting actions to perform
         if (
-                not list_of_action_to_do_with_text_without_bold_and_italic
-                and not list_of_action_to_do_with_text_only_with_bold_and_italic
+            not list_of_action_to_do_with_text_without_bold_and_italic
+            and not list_of_action_to_do_with_text_only_with_bold_and_italic
         ):
             # Send the `content` to the Facebook text box and create a new line
             selenium_element.send_keys(content)
@@ -449,15 +472,17 @@ class FacebookPoster:
 
             # Set cursor at the start of text
             selenium_element.send_keys(Keys.LEFT)
-
+            print('1')
             # Check if the cursor is at the start of the line and move it if necessary
-            n_to_move = self.move_cursor_to_start(
-                content=content_without_tags, selenium_element=selenium_element
+            n_to_move = self.move_cursor(
+                content=content_without_tags,
+                selenium_element=selenium_element,
+                direction="start",
             )
-
+            print('2')
             # Add n_to_move to variable when we store lenght of content to correct proper lenght
             n += n_to_move
-
+            print('3')
             # Apply bold and italic formatting and fix the Facebook glitch if necessary
             is_formatting, last_action = self.bold_and_italic_formatting(
                 content=content,
@@ -465,25 +490,32 @@ class FacebookPoster:
                 selenium_element=selenium_element,
                 text_modify_butttons=text_modify_butttons,
             )
-
+            print('4')
             # For pausing the script for some time
             self._time_patterns()
-
+            print('5')
             # Move the cursor to the end of the line
             selenium_element.send_keys(Keys.RIGHT * n)
-
+            print('6')
             # Check if the cursor is at the end of the line and move it if necessary
-            self.move_cursor_to_end(content=content, selenium_element=selenium_element)
+            self.move_cursor(
+                content=content_without_tags,
+                selenium_element=selenium_element,
+                direction="end",
+            )
+            # self.move_cursor_to_end(content=content, selenium_element=selenium_element)
 
             # If the last word was bold or italic, turn off the formatting before creating a new line
             if is_formatting:
-                self.action.key_down(Keys.CONTROL).send_keys("b" if last_action == 0 else "i").perform()
+                self.action.key_down(Keys.CONTROL).send_keys(
+                    "b" if last_action == 0 else "i"
+                ).perform()
                 self.action.reset_actions()
 
             # If the text has a list formatting, press Enter twice to turn off the formatting
             if (
-                    5 in list_of_action_to_do_with_text_without_bold_and_italic
-                    or 6 in list_of_action_to_do_with_text_without_bold_and_italic
+                5 in list_of_action_to_do_with_text_without_bold_and_italic
+                or 6 in list_of_action_to_do_with_text_without_bold_and_italic
             ):
                 selenium_element.send_keys(Keys.ENTER)
                 selenium_element.send_keys(Keys.ENTER)
@@ -526,5 +558,5 @@ class FacebookPoster:
 
 
 FacebookPoster(LOGIN_BETA, PASSWORD_BETA).prepare_and_send_post(
-    content_filename="content/1.txt"
+    content_filename="content/5.txt"
 )
