@@ -44,7 +44,7 @@ class FacebookPoster:
         # Add binary location for Firefox which is mandatory and headless mode on
         options.binary_location = r"C:\Program Files\Mozilla Firefox\firefox.exe"
 
-        # options.add_argument("--headless")
+        # Add argument headless
         # options.add_argument("--headless")
 
         # Setup Firefox driver
@@ -86,7 +86,7 @@ class FacebookPoster:
         return content
 
     def move_cursor(
-        self, content: str, selenium_element, direction: str, position=None
+        self, content: str, selenium_element, direction: str, position=None, to_move=None
     ):
         """
         Move cursor to the specified position of the line.
@@ -94,6 +94,7 @@ class FacebookPoster:
         :param selenium_element: Location to web element we point with selenium
         :param direction: "start", "end" or "position"
         :param position: int or None (if direction is not "position")
+        :param to_move: int or None (if direction is not "position" or position is not specified)
         :return: int
         """
         if direction not in ["start", "end", "position"]:
@@ -108,7 +109,7 @@ class FacebookPoster:
                 "Invalid value for argument 'position'. Expected int or None."
             )
 
-            # Select three characters
+            # Select three characters and set move key
         if direction == "start":
             self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * 3).perform()
             move_key = Keys.LEFT
@@ -120,7 +121,7 @@ class FacebookPoster:
             self.action.send_keys(Keys.RIGHT * position)
             self.action.key_down(Keys.SHIFT).send_keys(Keys.LEFT * 3).perform()
             move_key = Keys.RIGHT
-            n_to_move = position
+            n_to_move = to_move if to_move else position
         self.action.reset_actions()
 
         # Copy selected characters
@@ -143,11 +144,13 @@ class FacebookPoster:
         else:
             n_to_move = content.find(copied_text)
 
+        # For pausing the script for some time
+        self._time_patterns(3)
+
         if direction != "position":
             # Move cursor to the specified position
             selenium_element.send_keys(move_key * n_to_move)
             self._time_patterns(2)
-
         return n_to_move
 
     def _login_to_facebook(self):
@@ -216,13 +219,13 @@ class FacebookPoster:
         # Split text into text content and text formatting tags
         splited_content = [x for x in re.split(r"<(.+?)>", content) if x != ""]
 
-        # Init var steps as empty list
+        # Initialize an empty list
         steps = list()
 
-        # Init var temp_clean_text as content_without_tags
+        # Initialize temporary variable temp_clean_text as content_without_tags
         temp_clean_text = content_without_tags
 
-        # Init var num as 0 - it will be simulated the current text index
+        # Initialize num as 0 - it will be simulated as the current text index
         num = 0
 
         # Iterate through splited_content to find the start and end indexes of text formatting tags
@@ -240,7 +243,7 @@ class FacebookPoster:
                 num_to_add = temp_clean_text.index(elem) + len(elem)
                 num = num_to_add
 
-        for tag in steps:  # remove / character from list
+        for tag in steps:  # remove "/" character from list
             tag[1] = tag[1].replace("/", "")
 
         # Every element in the steps list is a tuple with two elements, such as (1, b) or (5, b).
@@ -293,18 +296,22 @@ class FacebookPoster:
         for action in action_to_execute:
             # If the formatting starts at the first character in the line
             if action[0] == 0:
+                # Check if cursor will set proper in 1-st postition
+                # If not, add necessary int to move
                 n_to_move = self.move_cursor(
                     content=content_without_tags,
                     selenium_element=selenium_element,
                     direction="position",
                     position=action[1],
                 )
+
+                # Back to start of the line
                 self.action.send_keys(Keys.LEFT * action[1])
 
                 # Press and hold SHIFT and move the cursor to the right by the number of characters specified in
                 # action[1]
                 self.action.key_down(Keys.SHIFT).send_keys(
-                    Keys.RIGHT * int(action[1] + n_to_move)
+                    Keys.RIGHT * (action[1] + n_to_move)
                 ).perform()
 
                 # Click text formatting button (after this, we reset action chain)
@@ -318,7 +325,7 @@ class FacebookPoster:
                 selenium_element.send_keys(Keys.RIGHT)
 
                 # Move back to the start of the line (after this, we reset action chain)
-                self.action.send_keys(Keys.LEFT * int(action[1])).perform()
+                self.action.send_keys(Keys.LEFT * action[1]).perform()
                 self.action.reset_actions()
 
                 # For pausing the script for some time
@@ -330,9 +337,6 @@ class FacebookPoster:
                     selenium_element=selenium_element,
                     direction="start",
                 )
-                # n_to_move = self.move_cursor_to_start(
-                #     content=content_without_tags, selenium_element=selenium_element
-                # )
 
                 # There is a glitch in the Facebook text box - if our last word has formatting, the formatting will
                 # be moved to the next line. So we have to check for this condition and if it's True,
@@ -342,21 +346,44 @@ class FacebookPoster:
                     last_action = action[2]
 
             else:
-                n_to_move = self.move_cursor(
+                # Check if cursor will set proper in 1-st postition
+                # If not, add necessary int to move
+                n_to_move_1 = self.move_cursor(
                     content=content_without_tags,
                     selenium_element=selenium_element,
                     direction="position",
-                    position=action[1],
+                    position=action[0],
                 )
-                self.action.send_keys(Keys.LEFT * action[1])
+
+                # Back to start of the line
+                self.action.send_keys(Keys.LEFT * action[0])
+
+                # Move to 1-st position
+                self.action.send_keys(Keys.RIGHT * (action[0] + n_to_move_1))
+
+                # Check if cursor will move proper to 2-nd postition
+                # If not, add necessary int to move
+                n_to_move_2 = self.move_cursor(
+                    content=content_without_tags,
+                    selenium_element=selenium_element,
+                    direction="position",
+                    position=action[1] - action[0],
+                    to_move=action[1]
+                )
+
+                # Calculate steps to move
+                k = (action[1] - action[0]) + (action[0] + n_to_move_1)
+
+                # Back to start of the line
+                self.action.send_keys(Keys.LEFT * k)
 
                 # Press and hold SHIFT and move cursor by n places to left
-                self.action.send_keys(Keys.RIGHT * int(action[0] + n_to_move)).perform()
+                self.action.send_keys(Keys.RIGHT * (action[0] + n_to_move_1)).perform()
                 self.action.reset_actions()
 
-                # Click text formatting button (after this, we reset action chain)
+                # Press and hold SHIFT and move cursor by n places to left
                 self.action.key_down(Keys.SHIFT).send_keys(
-                    Keys.RIGHT * (int(action[1]) - int(action[0]))
+                    Keys.RIGHT * (action[1] - action[0] + n_to_move_2)
                 ).perform()
 
                 # Click text formatting button (after this, we reset action chain)
@@ -382,9 +409,6 @@ class FacebookPoster:
                     selenium_element=selenium_element,
                     direction="start",
                 )
-                # n_to_move = self.move_cursor_to_start(
-                #     content=content_without_tags, selenium_element=selenium_element
-                # )
 
                 # There is a glitch in the Facebook text box - if our last word has formatting, the formatting will
                 # be moved to the next line. So we have to check for this condition and if it's True,
@@ -472,17 +496,14 @@ class FacebookPoster:
 
             # Set cursor at the start of text
             selenium_element.send_keys(Keys.LEFT)
-            print('1')
             # Check if the cursor is at the start of the line and move it if necessary
             n_to_move = self.move_cursor(
                 content=content_without_tags,
                 selenium_element=selenium_element,
                 direction="start",
             )
-            print('2')
             # Add n_to_move to variable when we store lenght of content to correct proper lenght
             n += n_to_move
-            print('3')
             # Apply bold and italic formatting and fix the Facebook glitch if necessary
             is_formatting, last_action = self.bold_and_italic_formatting(
                 content=content,
@@ -490,13 +511,10 @@ class FacebookPoster:
                 selenium_element=selenium_element,
                 text_modify_butttons=text_modify_butttons,
             )
-            print('4')
             # For pausing the script for some time
             self._time_patterns()
-            print('5')
             # Move the cursor to the end of the line
             selenium_element.send_keys(Keys.RIGHT * n)
-            print('6')
             # Check if the cursor is at the end of the line and move it if necessary
             self.move_cursor(
                 content=content_without_tags,
@@ -558,5 +576,5 @@ class FacebookPoster:
 
 
 FacebookPoster(LOGIN_BETA, PASSWORD_BETA).prepare_and_send_post(
-    content_filename="content/5.txt"
+    content_filename="content/11.txt"
 )
