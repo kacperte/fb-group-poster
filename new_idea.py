@@ -10,6 +10,7 @@ from selenium.webdriver.common.keys import Keys
 import time
 import re
 import win32clipboard
+from selenium.common.exceptions import TimeoutException
 
 
 # login BETA
@@ -556,11 +557,11 @@ class FacebookPoster:
             # For pausing the script for sometime
             self._time_patterns(4)
 
-            # Locate postbox element and click it
-            self.driver.find_element(
-                By.XPATH,
-                "//div[@class='x6s0dn4 x78zum5 x1l90r2v x1pi30zi x1swvt13 xz9dl7a']",
-            ).click()
+            # # Locate postbox element and click it
+            element = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located(
+                    (By.XPATH, "//div[@class='x6s0dn4 x78zum5 x1l90r2v x1pi30zi x1swvt13 xz9dl7a']")))
+            element.click()
 
             # For pausing the script for sometime
             self._time_patterns(8)
