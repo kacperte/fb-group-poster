@@ -10,7 +10,7 @@ from selenium.webdriver.common.keys import Keys
 import time
 import re
 import win32clipboard
-from random import randint
+from random import randint, uniform
 
 
 # login BETA
@@ -194,6 +194,8 @@ class FacebookPoster:
             EC.presence_of_element_located((By.ID, "facebook"))
         )
 
+        self._scroll_feed(self.driver, 3)
+
     def _time_patterns(self, tp=None):
         """
         Pause script for some time.
@@ -209,6 +211,19 @@ class FacebookPoster:
         else:
             self.time_pattern = tp
             time.sleep(self.time_pattern)
+
+    @staticmethod
+    def _scroll_feed(driver, iterations):
+        i = 0
+        while i < iterations:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);", 2000)
+
+            # Scroll down for 6 to 15 sec
+            time.sleep(uniform(6, 15))
+
+            # Stop for 3 to 5 sec
+            time.sleep(uniform(3, 5))
+            i += 1
 
     def bold_and_italic_formatting(
         self,
