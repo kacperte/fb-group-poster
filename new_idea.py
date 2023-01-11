@@ -10,7 +10,7 @@ from selenium.webdriver.common.keys import Keys
 import time
 import re
 import win32clipboard
-from selenium.common.exceptions import TimeoutException
+from random import randint
 
 
 # login BETA
@@ -58,7 +58,7 @@ class FacebookPoster:
 
         # By default, is set to 5,
         # will be used by time patterns
-        self.time_pattern = 5  # seconds
+        self.time_pattern = randint(3, 5)  # seconds
 
         # Dict with text format action
         self.text_formatting_action = {
@@ -146,12 +146,12 @@ class FacebookPoster:
             n_to_move = content.find(copied_text)
 
         # For pausing the script for some time
-        self._time_patterns(3)
+        self._time_patterns()
 
         if direction != "position":
             # Move cursor to the specified position
             selenium_element.send_keys(move_key * n_to_move)
-            self._time_patterns(2)
+            self._time_patterns()
         return n_to_move
 
     def _login_to_facebook(self):
@@ -170,7 +170,7 @@ class FacebookPoster:
         cookie.click()
 
         # For pausing the script for some time
-        self._time_patterns(3)
+        self._time_patterns()
 
         # Enter login and password
 
@@ -182,7 +182,7 @@ class FacebookPoster:
         password.send_keys(self.password)
 
         # For pausing the script for some time
-        self._time_patterns(3)
+        self._time_patterns()
 
         # Click login button
         login_button = WebDriverWait(self.driver, 10).until(
@@ -553,7 +553,7 @@ class FacebookPoster:
                 selenium_element.send_keys(Keys.ENTER)
 
         # For pausing the script for some time
-        self._time_patterns(2)
+        self._time_patterns()
 
     def prepare_and_send_post(self, content_filename):
         fb_groups = ["https://www.facebook.com/groups/1281302162058634/"]
@@ -564,7 +564,7 @@ class FacebookPoster:
             print(f"/// Start processing group: {group + 'buy_sell_discussion'}")
 
             # For pausing the script for sometime
-            self._time_patterns(4)
+            self._time_patterns()
 
             # # Locate postbox element and click it
             element = WebDriverWait(self.driver, 10).until(
@@ -573,7 +573,7 @@ class FacebookPoster:
             element.click()
 
             # For pausing the script for sometime
-            self._time_patterns(8)
+            self._time_patterns()
 
             # Activate postbox pop up to send value to it
             postbox = self.driver.switch_to.active_element
