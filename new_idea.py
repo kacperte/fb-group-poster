@@ -163,24 +163,34 @@ class FacebookPoster:
         self.driver.get(self.base_url)
 
         # Close cookie popup
-        self.driver.find_element(
-            By.XPATH,
-            "//button[text()='Zezwól na korzystanie z niezbędnych i opcjonalnych plików cookie']",
-        ).click()
+
+        cookie = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//button[text()='Zezwól na korzystanie z niezbędnych i opcjonalnych plików cookie']")))
+        cookie.click()
 
         # For pausing the script for some time
         self._time_patterns(3)
 
         # Enter login and password
-        self.driver.find_element(By.ID, "email").send_keys(self.login)
-        self.driver.find_element(By.ID, "pass").send_keys(self.password)
+
+        login = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "email")))
+        login.send_keys(self.login)
+        password = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "pass")))
+        password.send_keys(self.password)
 
         # For pausing the script for some time
         self._time_patterns(3)
 
         # Click login button
-        self.driver.find_element(By.XPATH, "//button[text()='Zaloguj się']").click()
-        WebDriverWait(self.driver, 10).until(
+        login_button = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[text()='Zaloguj się']")))
+        login_button.click()
+
+        # Load FB start page
+        WebDriverWait(self.driver, 15).until(
             EC.presence_of_element_located((By.ID, "facebook"))
         )
 
@@ -428,9 +438,8 @@ class FacebookPoster:
         :param selenium_element: A Selenium web element object representing the Facebook text box element.
         """
         # Find the text formatting buttons in the Facebook text box
-        text_modify_butttons = selenium_element.find_elements(
-            By.XPATH, "//span[@class='x12mruv9 xfs2ol5 x1gslohp x12nagc']"
-        )
+        text_modify_butttons = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_all_elements_located((By.XPATH, "//span[@class='x12mruv9 xfs2ol5 x1gslohp x12nagc']")))
 
         # Initialize empty lists to store text formatting actions for text without bold and italic formatting,
         # and text with only bold and italic formatting
@@ -559,7 +568,7 @@ class FacebookPoster:
 
             # # Locate postbox element and click it
             element = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located(
+                EC.element_to_be_clickable(
                     (By.XPATH, "//div[@class='x6s0dn4 x78zum5 x1l90r2v x1pi30zi x1swvt13 xz9dl7a']")))
             element.click()
 
