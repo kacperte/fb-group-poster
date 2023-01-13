@@ -12,7 +12,6 @@ import re
 import win32clipboard
 from random import randint, uniform
 
-
 # login BETA
 LOGIN_BETA = "random2022@hsswork.pl"
 PASSWORD_BETA = "Ewelina2022"
@@ -23,11 +22,13 @@ class FacebookPoster:
     A class representing a bot for posting in groups on Facebook.
     """
 
-    def __init__(self, login, password):
+    def __init__(self, login: str, password: str, groups: list, image_path: str):
         """
         Initializes the attributes of the class.
+        :param image_path: Path to image
         :param login: str Facebook login id credentials
         :param password: str Facebook login password credentials
+        :param groups: list Facebook groups list
         """
 
         # Facebook login id credentials
@@ -35,6 +36,12 @@ class FacebookPoster:
 
         # Facebook login password credentials
         self.password = password
+
+        # List with Facebook groups
+        self.groups = groups
+
+        # Path to image
+        self.image_path = image_path
 
         # Facebook page url
         self.base_url = "https://www.facebook.com/"
@@ -74,6 +81,35 @@ class FacebookPoster:
         # Run function to log into Facebook account
         self._login_to_facebook()
 
+        # Javascript code to add image
+        self.js_code = """
+            var target = arguments[0],
+                offsetX = arguments[1],
+                offsetY = arguments[2],
+                document = target.ownerDocument || document,
+                window = document.defaultView || window;
+
+            var input = document.createElement('INPUT');
+            input.type = 'file';
+            input.onchange = function () {
+              var rect = target.getBoundingClientRect(),
+                  x = rect.left + (offsetX || (rect.width >> 1)),
+                  y = rect.top + (offsetY || (rect.height >> 1)),
+                  dataTransfer = { files: this.files };
+
+              ['dragenter', 'dragover', 'drop'].forEach(function (name) {
+                var evt = document.createEvent('MouseEvent');
+                evt.initMouseEvent(name, !0, !0, window, 0, 0, 0, x, y, !1, !1, !1, !1, 0, null);
+                evt.dataTransfer = dataTransfer;
+                target.dispatchEvent(evt);
+              });
+
+              setTimeout(function () { document.body.removeChild(input); }, 25);
+            };
+            document.body.appendChild(input);
+            return input;
+        """
+
     @staticmethod
     def get_txt(filename):
         """
@@ -87,7 +123,12 @@ class FacebookPoster:
         return content
 
     def move_cursor(
-        self, content: str, selenium_element, direction: str, position=None, to_move=None
+            self,
+            content: str,
+            selenium_element,
+            direction: str,
+            position=None,
+            to_move=None,
     ):
         """
         Move cursor to the specified position of the line.
@@ -104,7 +145,7 @@ class FacebookPoster:
             )
 
         if direction == "position" and (
-            position is None or not isinstance(position, int)
+                position is None or not isinstance(position, int)
         ):
             raise ValueError(
                 "Invalid value for argument 'position'. Expected int or None."
@@ -166,7 +207,12 @@ class FacebookPoster:
 
         cookie = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable(
-                (By.XPATH, "//button[text()='Zezwól na korzystanie z niezbędnych i opcjonalnych plików cookie']")))
+                (
+                    By.XPATH,
+                    "//button[text()='Zezwól na korzystanie z niezbędnych i opcjonalnych plików cookie']",
+                )
+            )
+        )
         cookie.click()
 
         # For pausing the script for some time
@@ -175,10 +221,12 @@ class FacebookPoster:
         # Enter login and password
 
         login = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.ID, "email")))
+            EC.element_to_be_clickable((By.ID, "email"))
+        )
         login.send_keys(self.login)
         password = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.ID, "pass")))
+            EC.element_to_be_clickable((By.ID, "pass"))
+        )
         password.send_keys(self.password)
 
         # For pausing the script for some time
@@ -186,7 +234,8 @@ class FacebookPoster:
 
         # Click login button
         login_button = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[text()='Zaloguj się']")))
+            EC.element_to_be_clickable((By.XPATH, "//button[text()='Zaloguj się']"))
+        )
         login_button.click()
 
         # Load FB start page
@@ -216,7 +265,9 @@ class FacebookPoster:
     def _scroll_feed(driver, iterations):
         i = 0
         while i < iterations:
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);", 2000)
+            driver.execute_script(
+                "window.scrollTo(0, document.body.scrollHeight);", 2000
+            )
 
             # Scroll down for 6 to 15 sec
             time.sleep(uniform(6, 15))
@@ -226,11 +277,11 @@ class FacebookPoster:
             i += 1
 
     def bold_and_italic_formatting(
-        self,
-        content: str,
-        content_without_tags: str,
-        selenium_element,
-        text_modify_butttons,
+            self,
+            content: str,
+            content_without_tags: str,
+            selenium_element,
+            text_modify_butttons,
     ):
         """
         This function performs bolding and italicizing of text by determining the start and end index of the formatted
@@ -394,8 +445,11 @@ class FacebookPoster:
                     selenium_element=selenium_element,
                     direction="position",
                     position=action[1] - action[0],
-                    to_move=action[1]
+                    to_move=action[1],
                 )
+
+                # For pausing the script for some time
+                self._time_patterns()
 
                 # Calculate steps to move
                 k = (action[1] - action[0]) + (action[0] + n_to_move_1)
@@ -403,11 +457,14 @@ class FacebookPoster:
                 # Back to start of the line
                 self.action.send_keys(Keys.LEFT * k)
 
-                # Press and hold SHIFT and move cursor by n places to left
+                # Press and hold SHIFT and move cursor by n places to right
                 self.action.send_keys(Keys.RIGHT * (action[0] + n_to_move_1)).perform()
                 self.action.reset_actions()
 
-                # Press and hold SHIFT and move cursor by n places to left
+                # For pausing the script for some time
+                self._time_patterns()
+
+                # Press and hold SHIFT and move cursor by n places to right
                 self.action.key_down(Keys.SHIFT).send_keys(
                     Keys.RIGHT * (action[1] - action[0] + n_to_move_2)
                 ).perform()
@@ -445,7 +502,7 @@ class FacebookPoster:
 
         return is_formatting_on, last_action
 
-    def send_post(self, content: str, selenium_element):
+    def send_text(self, content: str, selenium_element):
         """
         Sends the given `content` string to the Facebook text box element specified by `selenium_element` and applies
         text formatting according to formatting tags in the `content` string.
@@ -454,7 +511,10 @@ class FacebookPoster:
         """
         # Find the text formatting buttons in the Facebook text box
         text_modify_butttons = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_all_elements_located((By.XPATH, "//span[@class='x12mruv9 xfs2ol5 x1gslohp x12nagc']")))
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "//span[@class='x12mruv9 xfs2ol5 x1gslohp x12nagc']")
+            )
+        )
 
         # Initialize empty lists to store text formatting actions for text without bold and italic formatting,
         # and text with only bold and italic formatting
@@ -485,15 +545,14 @@ class FacebookPoster:
 
         # If there are no text formatting actions to perform
         if (
-            not list_of_action_to_do_with_text_without_bold_and_italic
-            and not list_of_action_to_do_with_text_only_with_bold_and_italic
+                not list_of_action_to_do_with_text_without_bold_and_italic
+                and not list_of_action_to_do_with_text_only_with_bold_and_italic
         ):
             # Send the `content` to the Facebook text box and create a new line
             selenium_element.send_keys(content)
             selenium_element.send_keys(Keys.ENTER)
 
         # If there are text formatting actions to perform
-
         else:
             # Store the content without text formatting tags in `content_without_tags`
             content_without_tags = re.sub("<[^<>]+>", "", content)
@@ -527,8 +586,10 @@ class FacebookPoster:
                 selenium_element=selenium_element,
                 direction="start",
             )
+
             # Add n_to_move to variable when we store lenght of content to correct proper lenght
             n += n_to_move
+
             # Apply bold and italic formatting and fix the Facebook glitch if necessary
             is_formatting, last_action = self.bold_and_italic_formatting(
                 content=content,
@@ -536,17 +597,22 @@ class FacebookPoster:
                 selenium_element=selenium_element,
                 text_modify_butttons=text_modify_butttons,
             )
+
             # For pausing the script for some time
             self._time_patterns()
+
             # Move the cursor to the end of the line
             selenium_element.send_keys(Keys.RIGHT * n)
+
             # Check if the cursor is at the end of the line and move it if necessary
             self.move_cursor(
                 content=content_without_tags,
                 selenium_element=selenium_element,
                 direction="end",
             )
-            # self.move_cursor_to_end(content=content, selenium_element=selenium_element)
+
+            # For pausing the script for some time
+            self._time_patterns()
 
             # If the last word was bold or italic, turn off the formatting before creating a new line
             if is_formatting:
@@ -557,8 +623,8 @@ class FacebookPoster:
 
             # If the text has a list formatting, press Enter twice to turn off the formatting
             if (
-                5 in list_of_action_to_do_with_text_without_bold_and_italic
-                or 6 in list_of_action_to_do_with_text_without_bold_and_italic
+                    5 in list_of_action_to_do_with_text_without_bold_and_italic
+                    or 6 in list_of_action_to_do_with_text_without_bold_and_italic
             ):
                 selenium_element.send_keys(Keys.ENTER)
                 selenium_element.send_keys(Keys.ENTER)
@@ -571,9 +637,9 @@ class FacebookPoster:
         self._time_patterns()
 
     def prepare_and_send_post(self, content_filename):
-        fb_groups = ["https://www.facebook.com/groups/1281302162058634/"]
-        for group in fb_groups:
-
+        counter = 0
+        number = randint(3, 5)
+        for group in self.groups:
             # Open Facebook group url
             self.driver.get(group + "buy_sell_discussion")
             print(f"/// Start processing group: {group + 'buy_sell_discussion'}")
@@ -581,10 +647,15 @@ class FacebookPoster:
             # For pausing the script for sometime
             self._time_patterns()
 
-            # # Locate postbox element and click it
+            # Locate postbox element and click it
             element = WebDriverWait(self.driver, 10).until(
                 EC.element_to_be_clickable(
-                    (By.XPATH, "//div[@class='x6s0dn4 x78zum5 x1l90r2v x1pi30zi x1swvt13 xz9dl7a']")))
+                    (
+                        By.XPATH,
+                        "//div[@class='x6s0dn4 x78zum5 x1l90r2v x1pi30zi x1swvt13 xz9dl7a']",
+                    )
+                )
+            )
             element.click()
 
             # For pausing the script for sometime
@@ -596,10 +667,41 @@ class FacebookPoster:
             # Load content from file
             content = self.get_txt(content_filename)
 
+            #  Iterate through content file and add text
             for line in content.split("\n"):
-                self.send_post(content=line, selenium_element=postbox)
+                self.send_text(content=line, selenium_element=postbox)
 
+            # Add images to post
+            driver = element.parent
+            file_input = driver.execute_script(self.js_code, postbox, 0, 0)
+            file_input.send_keys(self.image_path)
 
-FacebookPoster(LOGIN_BETA, PASSWORD_BETA).prepare_and_send_post(
+            # For pausing the script for sometime
+            self._time_patterns()
+
+            # Click post button
+            self.driver.find_element(
+                By.XPATH, "//div[@aria-label='Opublikuj']"
+            ).click()
+
+            if counter % number:
+                self.driver.get(self.base_url)
+                self._time_patterns()
+                self._scroll_feed(self.driver, 5)
+
+            counter += 1
+
+fb_groups = [
+    "https://www.facebook.com/groups/1281302162058634/",
+    "https://www.facebook.com/groups/1281302162058634/",
+    "https://www.facebook.com/groups/1281302162058634/",
+    "https://www.facebook.com/groups/1281302162058634/",
+    "https://www.facebook.com/groups/1281302162058634/",
+    "https://www.facebook.com/groups/1281302162058634/",
+]
+
+image_path = r"C:\Users\kacpe\OneDrive\Pulpit\Python\Projekty\facebook-group-poster\images\11.jpg"
+
+FacebookPoster(LOGIN_BETA, PASSWORD_BETA, fb_groups, image_path).prepare_and_send_post(
     content_filename="content/11.txt"
 )
