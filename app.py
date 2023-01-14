@@ -12,6 +12,7 @@ import re
 import win32clipboard
 from random import randint, uniform
 
+
 # login BETA
 LOGIN_BETA = "random2022@hsswork.pl"
 PASSWORD_BETA = "Ewelina2022"
@@ -120,12 +121,12 @@ class FacebookPoster:
         return content
 
     def move_cursor(
-            self,
-            content: str,
-            selenium_element,
-            direction: str,
-            position=None,
-            to_move=None,
+        self,
+        content: str,
+        selenium_element,
+        direction: str,
+        position=None,
+        to_move=None,
     ):
         """
         Move cursor to the specified position of the line.
@@ -142,7 +143,7 @@ class FacebookPoster:
             )
 
         if direction == "position" and (
-                position is None or not isinstance(position, int)
+            position is None or not isinstance(position, int)
         ):
             raise ValueError(
                 "Invalid value for argument 'position'. Expected int or None."
@@ -190,7 +191,9 @@ class FacebookPoster:
             # Move cursor to the specified position
             selenium_element.send_keys(move_key * n_to_move)
             self._time_patterns()
-        return n_to_move
+
+        print(n_to_move)
+        return abs(n_to_move)
 
     def _login_to_facebook(self):
         """
@@ -274,11 +277,11 @@ class FacebookPoster:
             i += 1
 
     def bold_and_italic_formatting(
-            self,
-            content: str,
-            content_without_tags: str,
-            selenium_element,
-            text_modify_butttons,
+        self,
+        content: str,
+        content_without_tags: str,
+        selenium_element,
+        text_modify_butttons,
     ):
         """
         This function performs bolding and italicizing of text by determining the start and end index of the formatted
@@ -542,8 +545,8 @@ class FacebookPoster:
 
         # If there are no text formatting actions to perform
         if (
-                not list_of_action_to_do_with_text_without_bold_and_italic
-                and not list_of_action_to_do_with_text_only_with_bold_and_italic
+            not list_of_action_to_do_with_text_without_bold_and_italic
+            and not list_of_action_to_do_with_text_only_with_bold_and_italic
         ):
             # Send the `content` to the Facebook text box and create a new line
             selenium_element.send_keys(content)
@@ -620,8 +623,8 @@ class FacebookPoster:
 
             # If the text has a list formatting, press Enter twice to turn off the formatting
             if (
-                    5 in list_of_action_to_do_with_text_without_bold_and_italic
-                    or 6 in list_of_action_to_do_with_text_without_bold_and_italic
+                5 in list_of_action_to_do_with_text_without_bold_and_italic
+                or 6 in list_of_action_to_do_with_text_without_bold_and_italic
             ):
                 selenium_element.send_keys(Keys.ENTER)
                 selenium_element.send_keys(Keys.ENTER)
@@ -680,9 +683,7 @@ class FacebookPoster:
             self._time_patterns()
 
             # Click post button
-            self.driver.find_element(
-                By.XPATH, "//div[@aria-label='Opublikuj']"
-            ).click()
+            self.driver.find_element(By.XPATH, "//div[@aria-label='Opublikuj']").click()
 
             if counter % number:
                 self.driver.get(self.base_url)
@@ -690,6 +691,7 @@ class FacebookPoster:
                 self._scroll_feed(self.driver, 5)
 
             counter += 1
+
 
 fb_groups = [
     "https://www.facebook.com/groups/1281302162058634/",
@@ -702,6 +704,7 @@ fb_groups = [
 
 image_path = r"C:\Users\kacpe\OneDrive\Pulpit\Python\Projekty\facebook-group-poster\images\11.jpg"
 
-# FacebookPoster(LOGIN_BETA, PASSWORD_BETA, fb_groups, image_path).prepare_and_send_post(
+
+# x = FacebookPoster(LOGIN_BETA, PASSWORD_BETA, fb_groups, image_path).prepare_and_send_post(
 #     content_filename="content/4.txt"
 # )
