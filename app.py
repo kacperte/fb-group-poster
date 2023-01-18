@@ -112,13 +112,84 @@ class FacebookPoster:
     def get_txt(filename):
         """
         Return content of a text file.
-        :param filename: File path
+        :param filename: str File path
         :return: str
         """
         # Open file in read mode with ut-8 encode
         with open(filename, "r", encoding="utf-8") as file:
             content = file.read()
         return content
+
+    @staticmethod
+    def _scroll_feed(driver, iterations):
+        i = 0
+        while i < iterations:
+            driver.execute_script(
+                "window.scrollTo(0, document.body.scrollHeight);", 2000
+            )
+
+            # Scroll down for 6 to 15 sec
+            time.sleep(uniform(6, 15))
+
+            # Stop for 3 to 5 sec
+            time.sleep(uniform(3, 5))
+            i += 1
+
+    def create_selenium_object_for_testing(self, content, direction=None):
+        """
+        This function creates a Selenium web element that can be used for testing the 'move_cursor' method.
+        :param content: The content to be added to the web element
+        :param direction: The initial position of the cursor. Can be 'start', 'end' or 'position'.
+        :return: Selenium web element with the added content and cursor at the specified position
+        """
+
+        # Check if the provided direction is valid
+        if direction not in ["start", "end", "position"]:
+            raise ValueError("Invalid value for argument 'direction'. Expected 'start', 'end' or 'position'.")
+
+        # Log into Facebook
+        self._login_to_facebook(human_simulation=False)
+
+        # Open 1-st group from list
+        self.driver.get(self.groups[0] + "buy_sell_discussion")
+
+        # For pausing the script for sometime
+        self._time_patterns()
+
+        # Locate postbox element and click it
+        element = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable(
+                (
+                    By.XPATH,
+                    "//div[@class='x6s0dn4 x78zum5 x1l90r2v x1pi30zi x1swvt13 xz9dl7a']",
+                )
+            )
+        )
+        element.click()
+
+        # For pausing the script for sometime
+        self._time_patterns()
+
+        # Activate postbox pop up to send value to it
+        postbox = self.driver.switch_to.active_element
+        postbox.send_keys(content)
+
+        # Get the number of characters in the content
+        n = len(content)
+
+        # Set the cursor position based on the provided direction
+        if direction == 'start':
+            self.action.send_keys(Keys.LEFT * n).perform()
+        elif direction == 'position':
+            self.action.send_keys(Keys.LEFT * n).perform()
+            self.move_cursor(selenium_element=postbox, direction='start', content=content)
+        else:
+            self.action.send_keys(Keys.LEFT * n).perform()
+            self.move_cursor(selenium_element=postbox, direction='start', content=content)
+            self.action.send_keys(Keys.RIGHT * n).perform()
+
+
+        return postbox
 
     def move_cursor(
         self,
@@ -180,7 +251,7 @@ class FacebookPoster:
         if direction == "position":
             n_to_move -= content.find(copied_text) + 3
         elif direction == "end":
-            n_to_move -= content.find(copied_text)
+            n_to_move -= content.find(copied_text) + 3
         else:
             n_to_move = content.find(copied_text)
 
@@ -192,10 +263,10 @@ class FacebookPoster:
             selenium_element.send_keys(move_key * n_to_move)
             self._time_patterns()
 
-        print(n_to_move)
-        return abs(n_to_move)
+        print(n_to_move, content.find(copied_text))
+        return n_to_move
 
-    def _login_to_facebook(self):
+    def _login_to_facebook(self, human_simulation=True):
         """
         Log into Facebook.
         :return:
@@ -243,7 +314,8 @@ class FacebookPoster:
             EC.presence_of_element_located((By.ID, "facebook"))
         )
 
-        self._scroll_feed(self.driver, 3)
+        if human_simulation:
+            self._scroll_feed(self.driver, 3)
 
     def _time_patterns(self, tp=None):
         """
@@ -260,21 +332,6 @@ class FacebookPoster:
         else:
             self.time_pattern = tp
             time.sleep(self.time_pattern)
-
-    @staticmethod
-    def _scroll_feed(driver, iterations):
-        i = 0
-        while i < iterations:
-            driver.execute_script(
-                "window.scrollTo(0, document.body.scrollHeight);", 2000
-            )
-
-            # Scroll down for 6 to 15 sec
-            time.sleep(uniform(6, 15))
-
-            # Stop for 3 to 5 sec
-            time.sleep(uniform(3, 5))
-            i += 1
 
     def bold_and_italic_formatting(
         self,
@@ -637,7 +694,7 @@ class FacebookPoster:
         self._time_patterns()
 
     def prepare_and_send_post(self, content_filename):
-        # Run function to log into Facebook account
+        # Log into Facebook
         self._login_to_facebook()
 
         counter = 0
@@ -703,8 +760,9 @@ fb_groups = [
 ]
 
 image_path = r"C:\Users\kacpe\OneDrive\Pulpit\Python\Projekty\facebook-group-poster\images\11.jpg"
+content = """It is important to have a proper test content to check if the function is working correctly"""
 
+# bot = FacebookPoster(LOGIN_BETA, PASSWORD_BETA, fb_groups, image_path)
+# el = bot.create_selenium_object_for_testing(content=content, direction='end')
+# print(bot.move_cursor(content, el, 'end'))
 
-# x = FacebookPoster(LOGIN_BETA, PASSWORD_BETA, fb_groups, image_path).prepare_and_send_post(
-#     content_filename="content/4.txt"
-# )
