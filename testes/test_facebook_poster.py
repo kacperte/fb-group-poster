@@ -56,7 +56,7 @@ class TestFacebookPoster(unittest.TestCase):
             to_move,
         )
 
-    def test_move_cursor_with_invalid_position_argument(self):
+    def test_move_cursor_raises_error_on_invalid_position_argument(self):
         """Test if the function raises ValueError when position argument is not an integer"""
         content = "This is a test content."
         selenium_element = mock.Mock()
@@ -72,7 +72,7 @@ class TestFacebookPoster(unittest.TestCase):
             to_move,
         )
 
-    def test_move_cursor_with_invalid_n_for_end_and_position_argument(self):
+    def test_move_cursor_raises_error_on_invalid_n_for_end_and_position_argument(self):
         """Test if the function raises ValueError when n_for_end_and_position argument is not an integer"""
      content = "This is a test content."
      selenium_element = mock.Mock()
@@ -89,7 +89,7 @@ class TestFacebookPoster(unittest.TestCase):
          n_for_end_and_position='test'
      )
 
- def test_move_cursor_direction_start_and_correct_it(self):
+ def test_move_cursor_with_direction_start_and_correct_it(self):
      """Test if the cursor is moved to the correct position when direction is set to 'start'"""
      content = "Można też dodać testy dla różnych wartości parametrów wejściowych, np. dla różnych wartości direction, position lub to_move, oraz dodać testy dla przypadków błędów, np. gdy podany jest nieprawidłowy argument direction lub position nie jest liczbą całkowitą."
      direction = "start"
@@ -104,7 +104,7 @@ class TestFacebookPoster(unittest.TestCase):
 
      self.assertEqual(result, expected_result)
 
- def test_move_cursor_direction_start_without_correct(self):
+ def test_move_cursor_with_direction_start_without_correct(self):
      """Test if the cursor is moved to the start position when direction is set to 'start'"""
      content = "Można też dodać testy dla różnych wartości"
      direction = "start"
@@ -119,7 +119,7 @@ class TestFacebookPoster(unittest.TestCase):
 
      self.assertEqual(result, expected_result)
 
- def test_move_cursor_direction_end_and_correct_it(self):
+ def test_move_cursor_with_direction_end_and_correct_it(self):
      """Test if the cursor is moved to the end position when direction is set to 'end' and the value is correct"""
      content = "Można też dodać testy dla różnych wartości parametrów wejściowych, np. dla różnych wartości direction, position lub to_move, oraz dodać testy dla przypadków błędów, np. gdy podany jest nieprawidłowy argument direction lub position nie jest liczbą całkowitą."
      direction = "end"
@@ -134,7 +134,7 @@ class TestFacebookPoster(unittest.TestCase):
 
      self.assertEqual(result, expected_result)
 
- def test_move_cursor_direction_end_without_correct(self):
+ def test_move_cursor_with_direction_end_without_correct(self):
      """Test if the cursor is moved to the end position when direction is set to 'end' and the value is not correct"""
      content = "Można też dodać testy dla różnych wartości"
      direction = "end"
@@ -149,7 +149,7 @@ class TestFacebookPoster(unittest.TestCase):
 
      self.assertEqual(result, expected_result)
 
- def test_move_cursor_direction_position_and_correct_it(self):
+ def test_move_cursor_with_direction_position_and_correct_it(self):
      """Test if the cursor is moved to the correct position when direction is set to 'position' and the value is correct"""
      content = "Można też dodać testy dla różnych wartości parametrów wejściowych, np. dla różnych wartości direction, position lub to_move, oraz dodać testy dla przypadków błędów, np. gdy podany jest nieprawidłowy argument direction lub position nie jest liczbą całkowitą."
      direction = "position"
@@ -164,7 +164,7 @@ class TestFacebookPoster(unittest.TestCase):
 
      self.assertEqual(result, expected_result)
 
- def test_move_cursor_direction_position_without_correct(self):
+ def test_move_cursor_with_direction_position_without_correct(self):
      """Test if the cursor is moved to the correct position when direction is set to 'position' and the value is not correct"""
      content = "Można też dodać testy dla różnych wartości parametrów wejściowych, np. dla różnych wartości direction, position lub to_move, oraz dodać testy dla przypadków błędów, np. gdy podany jest nieprawidłowy argument direction lub position nie jest liczbą całkowitą."
      direction = "position"
