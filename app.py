@@ -14,7 +14,7 @@ from random import randint, uniform
 from collections import namedtuple
 
 # Prepare namedtuple
-Test_output = namedtuple('Test_output', ['selenium_element', 'n_for_end_and_position'])
+Test_output = namedtuple("Test_output", ["selenium_element", "n_for_end_and_position"])
 
 
 # login BETA
@@ -150,7 +150,9 @@ class FacebookPoster:
 
         # Check if the provided direction is valid
         if direction not in ["start", "end", "position"]:
-            raise ValueError("Invalid value for argument 'direction'. Expected 'start', 'end' or 'position'.")
+            raise ValueError(
+                "Invalid value for argument 'direction'. Expected 'start', 'end' or 'position'."
+            )
 
         # Log into Facebook
         self._login_to_facebook(human_simulation=True)
@@ -184,14 +186,18 @@ class FacebookPoster:
         n = len(content)
 
         # Set the cursor position based on the provided direction
-        if direction == 'start':
+        if direction == "start":
             self.action.send_keys(Keys.LEFT * n).perform()
-        elif direction == 'position':
+        elif direction == "position":
             self.action.send_keys(Keys.LEFT * n).perform()
-            n_for_end_and_position = self.move_cursor(selenium_element=postbox, direction='start', content=content)
+            n_for_end_and_position = self.move_cursor(
+                selenium_element=postbox, direction="start", content=content
+            )
         else:
             self.action.send_keys(Keys.LEFT * n).perform()
-            n_for_end_and_position = self.move_cursor(selenium_element=postbox, direction='start', content=content)
+            n_for_end_and_position = self.move_cursor(
+                selenium_element=postbox, direction="start", content=content
+            )
             self.action.send_keys(Keys.RIGHT * n).perform()
 
         return Test_output(postbox, n_for_end_and_position)
@@ -203,7 +209,7 @@ class FacebookPoster:
         direction: str,
         position=None,
         to_move=None,
-        n_for_end_and_position=None
+        n_for_end_and_position=None,
     ):
         """
         Move cursor to the specified position of the line.
@@ -228,7 +234,8 @@ class FacebookPoster:
             )
 
         if direction in ["end", "position"] and (
-                n_for_end_and_position is None or not isinstance(n_for_end_and_position, int)
+            n_for_end_and_position is None
+            or not isinstance(n_for_end_and_position, int)
         ):
             raise ValueError(
                 "Invalid value for argument 'n_for_end_and_position'. Expected 'start', 'end' or 'position'."
@@ -263,11 +270,14 @@ class FacebookPoster:
 
         # Calculate number of characters to move
         if direction == "position":
-            n_to_move -= content.find(copied_text, position - n_for_end_and_position) + 3
-            print(n_to_move, content.find(copied_text, n_for_end_and_position) + 3)
+            n_to_move -= (
+                content.find(copied_text, position - n_for_end_and_position) + 3
+            )
+
         elif direction == "end":
-            n_to_move -= content.find(copied_text,  len(content) - n_for_end_and_position - 3) + 3
-            print(f'n {n_for_end_and_position} /  text {copied_text} / pos {content.find(copied_text,  len(content) - n_for_end_and_position + 3)} ')
+            n_to_move -= (
+                content.find(copied_text, len(content) - n_for_end_and_position - 3) + 3
+            )
 
         else:
             n_to_move = content.find(copied_text)
@@ -358,7 +368,7 @@ class FacebookPoster:
         content_without_tags: str,
         selenium_element,
         text_modify_butttons,
-        n_for_end_and_position=None
+        n_for_end_and_position=None,
     ):
         """
         This function performs bolding and italicizing of text by determining the start and end index of the formatted
@@ -457,7 +467,7 @@ class FacebookPoster:
                     selenium_element=selenium_element,
                     direction="position",
                     position=action[1],
-                    n_for_end_and_position=n_for_end_and_position
+                    n_for_end_and_position=n_for_end_and_position,
                 )
 
                 # Back to start of the line
@@ -508,7 +518,7 @@ class FacebookPoster:
                     selenium_element=selenium_element,
                     direction="position",
                     position=action[0],
-                    n_for_end_and_position=n_for_end_and_position
+                    n_for_end_and_position=n_for_end_and_position,
                 )
 
                 # Back to start of the line
@@ -525,7 +535,7 @@ class FacebookPoster:
                     direction="position",
                     position=action[1] - action[0],
                     to_move=action[1],
-                    n_for_end_and_position=n_for_end_and_position
+                    n_for_end_and_position=n_for_end_and_position,
                 )
 
                 # For pausing the script for some time
@@ -676,7 +686,7 @@ class FacebookPoster:
                 content_without_tags=content_without_tags,
                 selenium_element=selenium_element,
                 text_modify_butttons=text_modify_butttons,
-                n_for_end_and_position=n_to_move
+                n_for_end_and_position=n_to_move,
             )
 
             # For pausing the script for some time
@@ -690,7 +700,7 @@ class FacebookPoster:
                 content=content_without_tags,
                 selenium_element=selenium_element,
                 direction="end",
-                n_for_end_and_position=n_to_move
+                n_for_end_and_position=n_to_move,
             )
 
             # For pausing the script for some time
@@ -790,4 +800,3 @@ content = """It is important to have a proper test content to check if the funct
 # bot = FacebookPoster(LOGIN_BETA, PASSWORD_BETA, fb_groups, image_path)
 # el = bot.create_selenium_object_for_testing(content=content, direction='end')
 # print(bot.move_cursor(content, el, 'end'))
-
