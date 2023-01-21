@@ -141,7 +141,7 @@ class FacebookPoster:
 
     def create_selenium_object_for_testing(self, content, direction=None):
         """
-        This function creates a Selenium web element that can be used for testing the 'move_cursor' method.
+        Creates a Selenium web element that can be used for testing the 'move_cursor' method.
         :param content: The content to be added to the web element
         :param direction: The initial position of the cursor. Can be 'start', 'end' or 'position'.
         :return: Selenium web element with the added content and cursor at the specified position
@@ -238,10 +238,10 @@ class FacebookPoster:
             or not isinstance(n_for_end_and_position, int)
         ):
             raise ValueError(
-                "Invalid value for argument 'n_for_end_and_position'. Expected 'start', 'end' or 'position'."
+                "Invalid value for argument 'n_for_end_and_position'. Expected int or None."
             )
 
-            # Select three characters and set move key
+        # Select three characters and set move key
         if direction == "start":
             self.action.key_down(Keys.SHIFT).send_keys(Keys.RIGHT * 3).perform()
             move_key = Keys.LEFT
@@ -270,16 +270,21 @@ class FacebookPoster:
 
         # Calculate number of characters to move
         if direction == "position":
+            # Subtract the position where the copied text is found in the content
+            # from the desired cursor position, taking into account that 3 characters were copied
             n_to_move -= (
-                content.find(copied_text, position - n_for_end_and_position) + 3
+                content.find(copied_text, position - n_for_end_and_position - 3) + 3
             )
 
         elif direction == "end":
+            # Subtract the position where the copied text is found in the content
+            # from the desired cursor position, taking into account that 3 characters were copied
             n_to_move -= (
                 content.find(copied_text, len(content) - n_for_end_and_position - 3) + 3
             )
 
         else:
+            # Find the position where the copied text is found in the content
             n_to_move = content.find(copied_text)
 
         # For pausing the script for some time
@@ -295,7 +300,8 @@ class FacebookPoster:
     def _login_to_facebook(self, human_simulation=True):
         """
         Log into Facebook.
-        :return:
+        :param human_simulation: Simulate human-like behavior during the login process.
+        :return: None
         """
         # Open Facebook at login page
         self.driver.get(self.base_url)
@@ -343,6 +349,7 @@ class FacebookPoster:
             EC.presence_of_element_located((By.ID, "facebook"))
         )
 
+        # Scroll the feed by 3 units to simulate human-like behavior
         if human_simulation:
             self._scroll_feed(self.driver, 3)
 
@@ -374,10 +381,15 @@ class FacebookPoster:
         This function performs bolding and italicizing of text by determining the start and end index of the formatted
         text and assigning a method to it (0 for bold, 1 for italic).
 
+        The function uses the "content" and "content_without_tags" variables to determine the starting and ending
+        indices of the text to be formatted. The indices are then used to perform the formatting using the
+        "selenium_element" and "text_modify_butttons
+
         :param content: a line of text with text formatting tags (e.g. <b>)
         :param content_without_tags: a line of text without text formatting tags
         :param selenium_element: a web element that we point to with selenium
         :param text_modify_butttons: a web element with text modifier buttons
+        :param n_for_end_and_position: int or None (if direction is not "position" or position is not specified)
         :return: a tuple of two boolean values, which is necessary to switch off a Facebook glitch
         """
         # Split text into text content and text formatting tags
@@ -474,7 +486,7 @@ class FacebookPoster:
                 self.action.send_keys(Keys.LEFT * action[1])
 
                 # Press and hold SHIFT and move the cursor to the right by the number of characters specified in
-                # action[1]
+                # action[1]'
                 self.action.key_down(Keys.SHIFT).send_keys(
                     Keys.RIGHT * (action[1] + n_to_move)
                 ).perform()
@@ -784,19 +796,3 @@ class FacebookPoster:
 
             counter += 1
 
-
-fb_groups = [
-    "https://www.facebook.com/groups/1281302162058634/",
-    "https://www.facebook.com/groups/1281302162058634/",
-    "https://www.facebook.com/groups/1281302162058634/",
-    "https://www.facebook.com/groups/1281302162058634/",
-    "https://www.facebook.com/groups/1281302162058634/",
-    "https://www.facebook.com/groups/1281302162058634/",
-]
-
-image_path = r"C:\Users\kacpe\OneDrive\Pulpit\Python\Projekty\facebook-group-poster\images\11.jpg"
-content = """It is important to have a proper test content to check if the function is working correctly"""
-
-# bot = FacebookPoster(LOGIN_BETA, PASSWORD_BETA, fb_groups, image_path)
-# el = bot.create_selenium_object_for_testing(content=content, direction='end')
-# print(bot.move_cursor(content, el, 'end'))
