@@ -17,11 +17,6 @@ from collections import namedtuple
 Test_output = namedtuple("Test_output", ["selenium_element", "n_for_end_and_position"])
 
 
-# login BETA
-LOGIN_BETA = "random2022@hsswork.pl"
-PASSWORD_BETA = "Ewelina2022"
-
-
 class FacebookPoster:
     """
     A class representing a bot for posting in groups on Facebook.
